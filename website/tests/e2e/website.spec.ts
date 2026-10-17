@@ -1,0 +1,82 @@
+import { test, expect } from "@playwright/test";
+
+test("search, pagination, language switching and detail navigation", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/zh/products");
+  await expect(page.locator(".product-card")).toHaveCount(4);
+  await page.getByRole("button", { name: "下一页", exact: true }).click();
+  await expect(page.locator(".product-card")).toHaveCount(2);
+  await page.getByRole("searchbox").fill("8400");
+  await expect(page.locator(".product-card")).toHaveCount(1);
+  await page.getByRole("searchbox").fill("unknown");
+  await expect(
+    page.getByText("没有匹配的产品，请调整筛选条件。"),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "清除筛选", exact: true })
+    .first()
+    .click();
+  await page.locator(".product-card").first().click();
+  await expect(page).toHaveURL(/\/zh\/products\/8400$/);
+  await page.locator(".language").click();
+  await expect(page).toHaveURL(/\/en\/products\/8400$/);
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await page.goto("/");
+  await expect(page).toHaveURL(/\/en$/);
+  expect(errors).toEqual([]);
+});
+
+for (const width of [375, 768, 1440]) {
+  test(`layout and images at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    for (const path of [
+      "/zh",
+      "/en",
+      "/zh/products",
+      "/en/products/8400",
+      "/zh/contact",
+    ]) {
+      await page.goto(path);
+      await expect(page.locator("h1")).toBeVisible();
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= window.innerWidth,
+        ),
+      ).toBeTruthy();
+      const broken = await page
+        .locator("img")
+        .evaluateAll(
+          (images) =>
+            images.filter((image) => image.complete && image.naturalWidth === 0)
+              .length,
+        );
+      expect(broken).toBe(0);
+    }
+    if (width < 900) {
+      await page.goto("/zh");
+      await page.getByRole("button", { name: "切换导航" }).click();
+      await expect(page.locator("#main-nav")).toBeVisible();
+      await page
+        .locator("#main-nav")
+        .getByRole("link", { name: "产品中心" })
+        .click();
+      await expect(page).toHaveURL(/\/zh\/products$/);
+    }
+  });
+}
+
+test("carousel controls and honest contact state", async ({ page }) => {
+  await page.goto("/zh");
+  await page.getByRole("button", { name: "暂停轮播" }).click();
+  await page.getByRole("button", { name: "轮播图 2", exact: true }).click();
+  await expect(page.locator(".hero-image").nth(1)).toBeVisible();
+  await page.locator(".floating-contact").click();
+  await expect(page).toHaveURL(/\/zh\/contact$/);
+  await expect(page.locator("form")).toHaveCount(0);
+  await expect(
+    page.locator(".contact-details").getByText("暂未配置"),
+  ).toHaveCount(2);
+});

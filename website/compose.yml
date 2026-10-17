@@ -1,0 +1,21 @@
+services:
+  website:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3100:3000"
+    environment:
+      SITE_DEFAULT_LOCALE: ${SITE_DEFAULT_LOCALE:-zh}
+      SITE_COMPANY_NAME: ${SITE_COMPANY_NAME:-}
+      SITE_COMPANY_NAME_EN: ${SITE_COMPANY_NAME_EN:-}
+      SITE_CONTACT_EMAIL: ${SITE_CONTACT_EMAIL:-}
+      SITE_CONTACT_PHONE: ${SITE_CONTACT_PHONE:-}
+      SITE_SUPPORT_URL: ${SITE_SUPPORT_URL:-}
+      NODE_OPTIONS: "--max-old-space-size=256"
+    mem_limit: 512m
+    cpus: 1.0
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
