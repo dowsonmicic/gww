@@ -1,0 +1,22 @@
+server:
+  servlet:
+    session:
+      cookie:
+        secure: false
+springdoc:
+  api-docs:
+    enabled: true
+knife4j:
+  enable: true
+spring:
+  config:
+    # 从backend工作目录启动时读取本地配置；也兼容在server目录启动。
+    import: optional:file:./.env[.properties],optional:file:../.env[.properties]
+  datasource:
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      # 配合询盘导出的fetchSize，MySQL按批读取，避免驱动缓存完整结果集。
+      data-source-properties:
+        useCursorFetch: true
+        useServerPrepStmts: true

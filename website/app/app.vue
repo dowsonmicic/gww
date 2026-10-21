@@ -1,38 +1,38 @@
 <script setup lang="ts">
 import { text, type Locale } from "~/data/catalog";
 const config = useRuntimeConfig();
+const site = await useSiteSettings();
 const route = useRoute();
+// 后台使用独立界面，不显示官网导航、页脚和浮动客服。
+const isAdmin = computed(
+  () => route.path === "/admin" || route.path.startsWith("/admin/"),
+);
+// URL决定当前显示语言；中英文页面共享导航和页脚组件。
 const locale = computed<Locale>(() =>
   route.params.locale === "en" ? "en" : "zh",
 );
 const t = computed(() => text[locale.value]);
 const menuOpen = ref(false);
+// 记住手动选择的语言一年，供根路径跳转使用；此Cookie不是登录凭证。
 const preferred = useCookie<string>("site-locale", {
   sameSite: "lax",
   maxAge: 31536000,
 });
-const links = [
-  "",
-  "about",
-  "products",
-  "brands",
-  "news",
-  "knowledge",
-  "honors",
-  "contact",
-];
+const links = ["", "about", "products", "brands", "news", "contact"];
 const company = computed(
   () =>
     (locale.value === "en"
-      ? config.public.companyNameEn
-      : config.public.companyName) || t.value.name,
+      ? site.value.companyNameEn
+      : site.value.companyName) || t.value.name,
 );
+// 只替换语言前缀，保留当前产品/文章路径。
 const switchLink = computed(() =>
   route.path.replace(
     /^\/(zh|en)(?=\/|$)/,
     locale.value === "zh" ? "/en" : "/zh",
   ),
 );
+// 点击导航后收起手机菜单。
 watch(
   () => route.path,
   () => {
@@ -43,53 +43,38 @@ useHead(() => ({ htmlAttrs: { lang: locale.value } }));
 </script>
 
 <template>
-  <div>
+  <div v-if="isAdmin">
+    <NuxtPage />
+  </div>
+  <div v-else>
     <div class="top-strip">
       <div class="container">
-        <span>{{ t.note }}</span
-        ><span>{{ t.tagline }}</span>
+        <span></span><span>{{ t.tagline }}</span>
       </div>
     </div>
     <header class="site-header">
       <div class="container header-inner">
         <NuxtLink :to="`/${locale}`" class="identity" :aria-label="t.nav[0]">
           <span class="brand-mark" aria-hidden="true">M<span>·</span></span>
-          <span
-            ><strong>{{ company }}</strong
-            ><small>{{ t.tagline }}</small></span
-          >
+          <span><strong>{{ company }}</strong><small>{{ t.tagline }}</small></span>
         </NuxtLink>
-        <button
-          class="menu-toggle"
-          :aria-label="t.menu"
-          :aria-expanded="menuOpen"
-          aria-controls="main-nav"
-          @click="menuOpen = !menuOpen"
-        >
+        <button class="menu-toggle" :aria-label="t.menu" :aria-expanded="menuOpen" aria-controls="main-nav"
+          @click="menuOpen = !menuOpen">
           ☰
         </button>
-        <nav
-          id="main-nav"
-          :class="{ open: menuOpen }"
-          :aria-label="locale === 'zh' ? '主导航' : 'Main navigation'"
-        >
-          <NuxtLink
-            v-for="(path, i) in links"
-            :key="path"
-            :to="`/${locale}${path ? '/' + path : ''}`"
-            >{{ t.nav[i] }}</NuxtLink
-          >
+        <nav id="main-nav" :class="{ open: menuOpen }" :aria-label="locale === 'zh' ? '主导航' : 'Main navigation'">
+          <NuxtLink v-for="(path, i) in links" :key="path" :to="`/${locale}${path ? '/' + path : ''}`">{{ t.nav[i] }}
+          </NuxtLink>
         </nav>
-        <NuxtLink
-          class="language"
-          :to="switchLink"
-          @click="preferred = locale === 'zh' ? 'en' : 'zh'"
-          >{{ locale === "zh" ? "English" : "中文" }}
-          <span aria-hidden="true">↗</span></NuxtLink
-        >
+        <NuxtLink class="language" :to="switchLink" @click="preferred = locale === 'zh' ? 'en' : 'zh'">{{ locale ===
+          "zh" ? "English" : "中文" }}
+          <span aria-hidden="true">↗</span>
+        </NuxtLink>
       </div>
     </header>
-    <main id="main-content"><NuxtPage /></main>
+    <main id="main-content">
+      <NuxtPage />
+    </main>
     <footer class="site-footer">
       <div class="container footer-grid">
         <div>
@@ -98,35 +83,32 @@ useHead(() => ({ htmlAttrs: { lang: locale.value } }));
           <p class="footer-note">{{ t.note }}</p>
         </div>
         <div>
+          <h3>{{ t.nav[1] }}</h3>
+          <NuxtLink :to="`/${locale}/products`">{{ t.nav[1] }}</NuxtLink>
+          <!-- <NuxtLink :to="`/${locale}/brands`">{{ t.nav[3] }}</NuxtLink> -->
+        </div>
+        <div>
           <h3>{{ t.nav[2] }}</h3>
-          <NuxtLink :to="`/${locale}/products`">POE · DOW</NuxtLink
-          ><NuxtLink :to="`/${locale}/brands`">{{ t.nav[3] }}</NuxtLink>
+          <NuxtLink :to="`/${locale}/products`">{{ t.nav[2] }}</NuxtLink>
+          <NuxtLink :to="`/${locale}/brands`">{{ t.nav[3] }}</NuxtLink>
         </div>
         <div>
           <h3>{{ t.contact }}</h3>
-          <p>{{ config.public.contactEmail || t.unconfigured }}</p>
+          <p>{{ t.email }}: {{ site.contactEmail || t.unconfigured }}</p>
+          <p>{{ t.phone }}: {{ site.contactPhone || t.unconfigured }}</p>
           <NuxtLink :to="`/${locale}/contact`">{{ t.contact }} ↗</NuxtLink>
         </div>
       </div>
       <div class="container footer-bottom">
-        <span>© {{ new Date().getFullYear() }} {{ company }}</span
-        ><span>{{
+        <span>© {{ new Date().getFullYear() }} {{ company }}</span><span>{{
           locale === "zh"
-            ? "一期A步 · 展示网站"
-            : "Stage A · Demonstration website"
+            ? "展示网站"
+            : "Demonstration website"
         }}</span>
       </div>
     </footer>
-    <a
-      v-if="config.public.supportUrl"
-      class="floating-contact"
-      :href="String(config.public.supportUrl)"
-      target="_blank"
-      rel="noopener noreferrer"
-      >{{ t.support }} ↗</a
-    >
-    <NuxtLink v-else class="floating-contact" :to="`/${locale}/contact`"
-      >{{ t.contact }} ↗</NuxtLink
-    >
+    <a v-if="site.supportUrl" class="floating-contact" :href="site.supportUrl" target="_blank"
+      rel="noopener noreferrer">{{ t.support }} ↗</a>
+    <NuxtLink v-else class="floating-contact" :to="`/${locale}/contact`">{{ t.contact }} ↗</NuxtLink>
   </div>
 </template>

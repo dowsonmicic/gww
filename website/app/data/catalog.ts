@@ -5,8 +5,6 @@ export const sections = [
   "products",
   "brands",
   "news",
-  "knowledge",
-  "honors",
   "contact",
 ] as const;
 
@@ -20,8 +18,6 @@ export const text = {
       "产品中心",
       "品牌展示",
       "新闻资讯",
-      "材料知识",
-      "荣誉资质",
       "联系我们",
     ] as const,
     eyebrow: "面向应用 · 连接材料",
@@ -42,7 +38,7 @@ export const text = {
     companyTitle: "以材料为起点，以应用为方向",
     companyText:
       "这里将展示企业介绍、材料供应能力与服务理念。当前为一期展示网站，企业名称、联系方式和技术资料待确认，不构成供货或代理承诺。",
-    advantages: ["清晰的产品目录", "面向应用的沟通", "中英文内容展示"],
+    advantages: ["清晰的产品目录", "面向应用的沟通", "多语言内容展示"],
     advantageText: [
       "按型号快速找到材料信息。",
       "从工艺与使用场景开始交流。",
@@ -93,8 +89,6 @@ export const text = {
       "Products",
       "Brands",
       "News",
-      "Material Insights",
-      "Credentials",
       "Contact",
     ],
     eyebrow: "APPLICATIONS MEET MATERIALS",
@@ -120,7 +114,7 @@ export const text = {
     advantages: [
       "A clear product catalog",
       "Application-led conversations",
-      "Chinese and English content",
+      "Multilingual content display",
     ],
     advantageText: [
       "Find material information by grade.",
@@ -281,7 +275,11 @@ export const articles = [
   },
 ];
 
-/** Local repository boundary: replace its implementation with public APIs in stage B. */
+/**
+ * 查询本地演示产品，B步可替换为公共API实现。
+ * query匹配型号/类别/品牌，忽略大小写及首尾空格；
+ * category、brand为空表示不限制，各条件同时满足才返回产品。
+ */
 export function filterProducts(query = "", category = "", brand = "") {
   const term = query.trim().toLowerCase();
   return products.filter(
@@ -294,6 +292,10 @@ export function filterProducts(query = "", category = "", brand = "") {
   );
 }
 
+/**
+ * 将语言之后的路径数组解析为页面类型和详情ID。
+ * 空数组代表首页；仅接受已定义栏目及存在的详情，不匹配则返回null供页面显示404。
+ */
 export function resolvePath(parts: string[]) {
   if (parts.length === 0) return { type: "home", id: "" };
   if (
@@ -309,8 +311,8 @@ export function resolvePath(parts: string[]) {
     return { type: "product", id: parts[1]! };
   if (
     parts.length === 2 &&
-    ["news", "knowledge"].includes(parts[0]!) &&
-    articles.some((a) => a.id === parts[1] && a.kind === parts[0])
+    parts[0] === "news" &&
+    articles.some((a) => a.id === parts[1])
   )
     return { type: "article", id: parts[1]! };
   return null;

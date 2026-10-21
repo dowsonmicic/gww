@@ -1,0 +1,35 @@
+# IDE
+.idea/
+.vscode/
+.history/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 临时/调试
+*.log
+*.tmp
+*.zip
+cookies.txt
+server-directory-report-*.zip
+
+# Java
+backend/server/data/
+backend/server/target/
+backend/**/target/
+backend/**/.mvn/wrapper/maven-wrapper.jar
+
+# Node/Nuxt
+website/node_modules/
+website/.nuxt/
+website/.output/
+website/.output.zip
+website/.output.tar
+website/.env
+website/.env.local
+website/test-results/
+website/playwright-report/
+
+# 环境密钥（手动部署用，不入仓库）
+backend/.env

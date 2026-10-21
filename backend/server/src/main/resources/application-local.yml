@@ -1,0 +1,21 @@
+# local 开发：H2 文件数据库 + MySQL 兼容模式，不依赖 MySQL 或 Redis。
+# MODE=MySQL 确保 ON DUPLICATE KEY UPDATE 等 upsert SQL 正常执行。
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/gww?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+    username: root
+    password: 123456
+  flyway:
+    enabled: true
+
+app:
+  admin:
+    # 与 backend/.env 保持一致；Spring Boot 不自动读 .env，这里才是实际生效的
+    password: xianglai321
+  media:
+    # 磁盘路径仅服务端读写，绝对路径，不落入构建目录
+    public-root: D:/work/gww/backend/server/data/media/public
+    private-root: D:/work/gww/backend/server/data/media/private
+    public-url-prefix: /media/
+    max-upload-bytes: 20971520

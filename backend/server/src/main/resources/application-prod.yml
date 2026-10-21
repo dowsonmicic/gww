@@ -1,0 +1,22 @@
+server:
+  servlet:
+    session:
+      cookie:
+        secure: true
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+knife4j:
+  enable: false
+  production: true
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      # 导出询盘时使用服务器游标，限制每批读取的内存占用。
+      data-source-properties:
+        useCursorFetch: true
+        useServerPrepStmts: true

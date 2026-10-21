@@ -1,0 +1,12 @@
+# TEMPLATE ONLY: replace __VERIFIED_PUBLIC_MEDIA_ROOT__ with a verified absolute directory.
+# Merge into the selected Baota virtual host after backup and review; do not load as-is.
+# Public, approved files only. Private/draft files must never be placed here.
+location ^~ /media/ {
+    alias __VERIFIED_PUBLIC_MEDIA_ROOT__/;
+    autoindex off;
+    add_header X-Content-Type-Options nosniff always;
+    # Allow only approved media extensions; never expose scripts or arbitrary uploads.
+    if ($uri !~* "\.(jpg|jpeg|png|webp|mp4|pdf)$") {
+        return 403;
+    }
+}

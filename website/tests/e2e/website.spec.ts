@@ -6,6 +6,16 @@ test("search, pagination, language switching and detail navigation", async ({
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/zh/products");
+  await expect(page.locator(".filters select")).toHaveCount(0);
+  const categories = page.getByRole("group", { name: "材料类别", exact: true });
+  const brands = page.getByRole("group", { name: "品牌", exact: true });
+  await categories.getByRole("button", { name: "POE", exact: true }).click();
+  await brands.getByRole("button", { name: "DOW", exact: true }).click();
+  await expect(categories.getByRole("button", { name: "POE", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(brands.getByRole("button", { name: "DOW", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "清除筛选", exact: true }).click();
+  await expect(categories.getByRole("button", { name: "全部", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(brands.getByRole("button", { name: "全部", exact: true })).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator(".product-card")).toHaveCount(4);
   await page.getByRole("button", { name: "下一页", exact: true }).click();
   await expect(page.locator(".product-card")).toHaveCount(2);
@@ -68,15 +78,18 @@ for (const width of [375, 768, 1440]) {
   });
 }
 
-test("carousel controls and honest contact state", async ({ page }) => {
+test("carousel controls and new contact form", async ({ page }) => {
   await page.goto("/zh");
   await page.getByRole("button", { name: "暂停轮播" }).click();
   await page.getByRole("button", { name: "轮播图 2", exact: true }).click();
   await expect(page.locator(".hero-image").nth(1)).toBeVisible();
   await page.locator(".floating-contact").click();
   await expect(page).toHaveURL(/\/zh\/contact$/);
-  await expect(page.locator("form")).toHaveCount(0);
-  await expect(
-    page.locator(".contact-details").getByText("暂未配置"),
-  ).toHaveCount(2);
+  await expect(page.locator(".inquiry-form")).toBeVisible();
+  await expect(page.locator(".page-banner")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "联系我们", exact: true })).toHaveCount(1);
+  await expect(page.locator(".contact-panel")).toHaveCount(0);
+  await expect(page.locator(".contact-details")).toHaveCount(0);
+  await expect(page.getByLabel("网站地址", { exact: true })).toHaveCount(0);
+  await expect(page.getByLabel("选择产品", { exact: true })).toHaveCount(0);
 });

@@ -1,0 +1,27 @@
+# Java接口文档索引
+
+公开接口及共用CSRF归api，管理和登录接口归admin。所有写请求需CSRF；管理接口需Session Cookie。
+
+- [admin - 读取网站基础设置](./admin/md/get_读取网站基础设置.md) | [OpenAPI JSON](./admin/json/get_读取网站基础设置.json)
+- [admin - 保存网站基础设置](./admin/md/save_保存网站基础设置.md) | [OpenAPI JSON](./admin/json/save_保存网站基础设置.json)
+- [admin - 修改询盘跟进状态](./admin/md/update_修改询盘跟进状态.md) | [OpenAPI JSON](./admin/json/update_修改询盘跟进状态.json)
+- [admin - 修改内容](./admin/md/update_1_修改内容.md) | [OpenAPI JSON](./admin/json/update_1_修改内容.json)
+- [admin - 删除内容](./admin/md/delete_删除内容.md) | [OpenAPI JSON](./admin/json/delete_删除内容.json)
+- [api - 保存客户询盘，需CSRF令牌及限流](./api/md/create_保存客户询盘，需CSRF令牌及限流.md) | [OpenAPI JSON](./api/json/create_保存客户询盘，需CSRF令牌及限流.json)
+- [admin - 管理员登录](./admin/md/login_管理员登录.md) | [OpenAPI JSON](./admin/json/login_管理员登录.json)
+- [admin - 媒体列表](./admin/md/list_媒体列表.md) | [OpenAPI JSON](./admin/json/list_媒体列表.json)
+- [admin - 上传媒体到私有目录](./admin/md/upload_上传媒体到私有目录.md) | [OpenAPI JSON](./admin/json/upload_上传媒体到私有目录.json)
+- [admin - 确认公开发布媒体](./admin/md/publish_确认公开发布媒体.md) | [OpenAPI JSON](./admin/json/publish_确认公开发布媒体.json)
+- [admin - 管理内容分页列表](./admin/md/list_1_管理内容分页列表.md) | [OpenAPI JSON](./admin/json/list_1_管理内容分页列表.json)
+- [admin - 新建内容](./admin/md/create_1_新建内容.md) | [OpenAPI JSON](./admin/json/create_1_新建内容.json)
+- [api - 读取网站基础设置](./api/md/get_1_读取网站基础设置.md) | [OpenAPI JSON](./api/json/get_1_读取网站基础设置.json)
+- [api - 读取已发布图片](./api/md/publicImage_读取已发布图片.md) | [OpenAPI JSON](./api/json/publicImage_读取已发布图片.json)
+- [api - 已发布内容列表，中英文完整资料](./api/md/published_已发布内容列表，中英文完整资料.md) | [OpenAPI JSON](./api/json/published_已发布内容列表，中英文完整资料.json)
+- [api - 已发布内容详情](./api/md/detail_已发布内容详情.md) | [OpenAPI JSON](./api/json/detail_已发布内容详情.json)
+- [admin - 查询当前管理员](./admin/md/me_查询当前管理员.md) | [OpenAPI JSON](./admin/json/me_查询当前管理员.json)
+- [api - 获取CSRF令牌，写请求需携带此请求头和Session Cookie](./api/md/csrf_获取CSRF令牌，写请求需携带此请求头和Session Cookie.md) | [OpenAPI JSON](./api/json/csrf_获取CSRF令牌，写请求需携带此请求头和Session Cookie.json)
+- [admin - 管理员下载私有媒体](./admin/md/file_管理员下载私有媒体.md) | [OpenAPI JSON](./admin/json/file_管理员下载私有媒体.json)
+- [admin - 管理员查询完整询盘，按提交时间倒序](./admin/md/list_2_管理员查询完整询盘，按提交时间倒序.md) | [OpenAPI JSON](./admin/json/list_2_管理员查询完整询盘，按提交时间倒序.json)
+- [admin - 管理员查看单条询盘详情](./admin/md/detail_1_管理员查看单条询盘详情.md) | [OpenAPI JSON](./admin/json/detail_1_管理员查看单条询盘详情.json)
+- [admin - 管理员按日期批量导出询盘Excel](./admin/md/export_管理员按日期批量导出询盘Excel.md) | [OpenAPI JSON](./admin/json/export_管理员按日期批量导出询盘Excel.json)
+- [admin - 退出登录并失效Session](./admin/md/logout_退出登录并失效Session.md) | [OpenAPI JSON](./admin/json/logout_退出登录并失效Session.json)

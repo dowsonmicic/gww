@@ -3,6 +3,8 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
   css: ["~/assets/main.css"],
   runtimeConfig: {
+    // 服务端专用，不向浏览器暴露内部Java地址。
+    javaApiBase: "http://127.0.0.1:8083",
     public: {
       defaultLocale: "zh",
       supportUrl: "",

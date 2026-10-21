@@ -1,0 +1,33 @@
+CREATE TABLE content_record (
+ id VARCHAR(36) PRIMARY KEY,
+ kind VARCHAR(20) NOT NULL,
+ name VARCHAR(120) NOT NULL,
+ name_en VARCHAR(180) NOT NULL,
+ category VARCHAR(80) NOT NULL,
+ brand VARCHAR(80) NOT NULL,
+ status VARCHAR(20) NOT NULL,
+ description TEXT NOT NULL,
+ description_en TEXT NOT NULL,
+ image_id VARCHAR(36),
+ updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ INDEX idx_content_kind_status (kind, status)
+);
+CREATE TABLE media_record (
+ id VARCHAR(36) PRIMARY KEY,
+ object_key VARCHAR(100) NOT NULL UNIQUE,
+ original_name VARCHAR(180) NOT NULL,
+ content_type VARCHAR(80) NOT NULL,
+ size_bytes BIGINT NOT NULL,
+ published BOOLEAN NOT NULL DEFAULT FALSE,
+ created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE inquiry_record (
+ id VARCHAR(36) PRIMARY KEY,
+ name VARCHAR(80) NOT NULL,
+ email VARCHAR(180) NOT NULL,
+ phone VARCHAR(40) NOT NULL,
+ message TEXT NOT NULL,
+ locale VARCHAR(15) NOT NULL,
+ status VARCHAR(20) NOT NULL DEFAULT 'NEW',
+ created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

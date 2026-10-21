@@ -1,0 +1,25 @@
+-- 后续新增功能的SQL模板，不会被Flyway扫描或执行。
+-- 确认需求并测试后，复制至：
+-- server/src/main/resources/db/migration/V2__feature_description.sql
+-- 若V2已经存在，使用下一个未使用的版本号；不要覆盖历史迁移。
+
+-- A区：新增表。
+-- CREATE TABLE feature_record (...);
+
+-- B区：新增字段。
+-- 先使用可空字段或兼容默认值，防止已有数据迁移失败。
+-- ALTER TABLE content_record ADD COLUMN new_field VARCHAR(100) NULL;
+
+-- C区：数据回填。
+-- 分批处理大表，校验影响行数，不将真实客户数据写入脚本。
+-- UPDATE content_record SET new_field = ... WHERE ...;
+
+-- D区：新增索引或约束。
+-- 创建唯一索引前先确认没有重复数据。
+-- CREATE INDEX idx_feature ON content_record (...);
+
+-- E区：验收与恢复。
+-- 记录备份位置、预计锁表时间、验收查询及恢复操作。
+-- MySQL DDL可能隐式提交，不假定@Transactional或SQL事务可回滚DDL。
+-- 多语言扩展推荐新增(content_id, locale)唯一的翻译子表，
+-- 不继续追加name_vi/name_fr等固定语言字段。

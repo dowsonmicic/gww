@@ -1,6 +1,8 @@
-# 一期A步展示官网
+# 展示官网与管理后台
 
-Vue 3 + Nuxt 4 + TypeScript；默认中文，可切换英文。使用用户提供的 `.images/lb`、`show`、`brands` 图片副本，不连接数据库、Java、登录、OSS 或 AI。
+Vue 3 + Nuxt 4 + TypeScript；默认中文，可切换英文。产品及文章通过Java接口读取MySQL，轮播和商标仍使用用户提供的静态素材。不接OSS、Redis或AI。
+
+`/admin` 使用Element Plus及Java登录，产品/文章CRUD、图片上传、双语询盘和网站基础设置已接入MySQL；联系页随页面语言提供可提交表单，设置覆盖页头、页脚、企业介绍及联系方式。分类品牌只读汇总，仅轮播/商标替换仍为预览，详见 [后台及存储说明](../docs/admin/ADMIN_README.md)。
 
 ## 本地运行
 
@@ -18,7 +20,7 @@ npm ci
 npm run dev
 ```
 
-本地默认地址 `http://localhost:3000/zh`。不需要数据库或云凭证。
+本地默认地址 `http://localhost:3000/zh`。先按[后端说明](../backend/README.md)启动MySQL及Java；Java默认 `http://127.0.0.1:8080`，可用 `NUXT_JAVA_API_BASE` 覆盖。Java不可用时不回退静态产品。
 
 测试数据逻辑、类型、生产构建：
 
@@ -38,8 +40,10 @@ npm run test:smoke
 
 ```powershell
 npx playwright install chromium
-npm run test:e2e
+npx playwright test tests/e2e/mysql.spec.ts
 ```
+
+真实MySQL用例需显式提供 `ADMIN_TEST_PASSWORD`；SQL交叉验证另需 `MYSQL_TEST_DATABASE`、`MYSQL_TEST_USER`、`MYSQL_PWD`，图片清理需提供 `MEDIA_TEST_PUBLIC_ROOT`、`MEDIA_TEST_PRIVATE_ROOT`。只在本地开发库运行，不用于生产。旧A步静态页面断言不再代表当前数据库联调结果。
 
 ## 配置
 
@@ -65,17 +69,17 @@ npm start
 
 ## 内容与扩展
 
-- `app/data/catalog.ts` 集中维护示例资料及本地查询，B步可替换为 API。
+- `app/data/catalog.ts` 保留词条和历史示例，当前运行页面不使用其产品/文章数组。
 - `app/pages/[locale]/[[...slug]].vue` 提供首页及全部内容页面。
-- 8400 等型号名称来自文件名；POE/DOW 是演示分类，不是已审核技术规格，正式发布前须核实。
+- 官网产品/文章仅展示数据库已发布记录，空数据库显示空内容，不自动导入示例。
 - 品牌图不等于代理授权，未填写电话、证书、性能参数或供货承诺。
-- 联系页无假表单；PDF/视频未提供，不展示虚假播放或下载按钮。
+- 联系页表单真实提交到Java/MySQL，姓名、邮箱、电话、留言必填；其他项选填。PDF/视频未提供，不展示虚假播放或下载按钮。
 - 当前测试版设置 `noindex, nofollow`，不生成站点地图；这不是安全访问控制。
 - 仅支持两种已完成翻译的语言，扩展语言要同步词条、内容、路由与配置校验。
 
 ## 部署与限制
 
-阿里云已有 2核2GB 部署见 [部署说明](../一期测试方案/一期A步/一期A步_部署与验证说明.md)。构建在本地进行；不要在 2GB 服务器安装构建工具链或把源码构建当运行步骤。
+阿里云已有 2核2GB 部署见 [部署说明](../docs/plan/一期测试方案/一期A步/一期A步_部署与验证说明.md)。构建在本地进行；不要在 2GB 服务器安装构建工具链或把源码构建当运行步骤。
 
 HTTP/浏览器验证不代表阿里云负载、24小时运行或越南网络验收已完成。现有服务器尚未连接或修改。
 

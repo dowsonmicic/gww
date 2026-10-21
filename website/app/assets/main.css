@@ -597,13 +597,14 @@ select:focus-visible {
 .floating-contact {
     position: fixed;
     right: 20px;
-    bottom: 24px;
+    bottom: 120px;
     z-index: 30;
     background: var(--green);
     color: white;
     padding: 15px 20px;
     box-shadow: 0 4px 24px #0002;
     font-size: 13px;
+    border-radius: 10px;
 }
 
 .page-banner {
@@ -644,19 +645,42 @@ select:focus-visible {
     margin-bottom: 28px;
 }
 
-.filters label {
-    display: block;
-    font-size: 12px;
-    margin-bottom: 10px;
+.filter-group {
+    margin-bottom: 24px;
+    min-width: 0;
 }
 
-.filters select {
+.filter-group h3 {
+    font-size: 12px;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+.filter-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.filter-options button {
     width: 100%;
     padding: 12px;
     border: 1px solid var(--line);
     background: white;
-    margin-bottom: 24px;
     color: var(--ink);
+    text-align: left;
+    font-size: 13px;
+}
+
+.filter-options button:hover {
+    border-color: var(--green);
+    color: var(--green);
+}
+
+.filter-options button.active {
+    background: var(--green);
+    border-color: var(--green);
+    color: white;
 }
 
 .filters .small {
@@ -1183,14 +1207,8 @@ select:focus-visible {
         margin-bottom: 8px;
     }
 
-    .filters label {
-        margin-bottom: 0;
-        grid-row: 2;
-    }
-
-    .filters select {
+    .filter-group {
         margin-bottom: 8px;
-        grid-row: 3;
     }
 
     .filters .small {

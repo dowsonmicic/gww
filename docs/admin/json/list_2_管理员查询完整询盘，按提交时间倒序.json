@@ -1,0 +1,658 @@
+{
+    "openapi":  "3.1.0",
+    "info":  {
+                 "title":  "官网管理后台",
+                 "description":  "同源Session认证；所有写请求需携带CSRF请求头。",
+                 "version":  "1.0.0"
+             },
+    "servers":  [
+                    {
+                        "url":  "http://localhost:8080",
+                        "description":  "本地开发"
+                    }
+                ],
+    "paths":  {
+                  "/api/admin/inquiries":  {
+                                               "get":  {
+                                                           "tags":  [
+                                                                        "inquiry-controller"
+                                                                    ],
+                                                           "summary":  "管理员查询完整询盘，按提交时间倒序",
+                                                           "description":  "按数据库created_at查询；startDate/endDate格式yyyy-MM-dd，包含起止日全天；locale可选zh/en，不传条件查询全部。",
+                                                           "operationId":  "list_2",
+                                                           "parameters":  [
+                                                                              {
+                                                                                  "name":  "startDate",
+                                                                                  "in":  "query",
+                                                                                  "required":  false,
+                                                                                  "schema":  {
+                                                                                                 "type":  "string",
+                                                                                                 "format":  "date"
+                                                                                             }
+                                                                              },
+                                                                              {
+                                                                                  "name":  "endDate",
+                                                                                  "in":  "query",
+                                                                                  "required":  false,
+                                                                                  "schema":  {
+                                                                                                 "type":  "string",
+                                                                                                 "format":  "date"
+                                                                                             }
+                                                                              },
+                                                                              {
+                                                                                  "name":  "locale",
+                                                                                  "in":  "query",
+                                                                                  "required":  false,
+                                                                                  "schema":  {
+                                                                                                 "type":  "string"
+                                                                                             }
+                                                                              }
+                                                                          ],
+                                                           "responses":  {
+                                                                             "200":  {
+                                                                                         "description":  "OK",
+                                                                                         "content":  {
+                                                                                                         "*/*":  {
+                                                                                                                     "schema":  {
+                                                                                                                                    "$ref":  "#/components/schemas/ResultListVo"
+                                                                                                                                }
+                                                                                                                 }
+                                                                                                     }
+                                                                                     },
+                                                                             "400":  {
+                                                                                         "description":  "参数校验失败"
+                                                                                     },
+                                                                             "401":  {
+                                                                                         "description":  "未登录或凭证错误"
+                                                                                     },
+                                                                             "403":  {
+                                                                                         "description":  "权限不足或CSRF无效"
+                                                                                     },
+                                                                             "500":  {
+                                                                                         "description":  "服务异常"
+                                                                                     }
+                                                                         },
+                                                           "security":  [
+                                                                            {
+                                                                                "session":  [
+
+                                                                                            ]
+                                                                            }
+                                                                        ]
+                                                       }
+                                           }
+              },
+    "components":  {
+                       "schemas":  {
+                                       "SiteSettings":  {
+                                                            "type":  "object",
+                                                            "description":  "网站基础设置，中英文信息分区，联系方式共用",
+                                                            "properties":  {
+                                                                               "companyName":  {
+                                                                                                   "type":  "string",
+                                                                                                   "maxLength":  120,
+                                                                                                   "minLength":  0
+                                                                                               },
+                                                                               "companyNameEn":  {
+                                                                                                     "type":  "string",
+                                                                                                     "maxLength":  180,
+                                                                                                     "minLength":  0
+                                                                                                 },
+                                                                               "companyIntro":  {
+                                                                                                    "type":  "string",
+                                                                                                    "maxLength":  4000,
+                                                                                                    "minLength":  0
+                                                                                                },
+                                                                               "companyIntroEn":  {
+                                                                                                      "type":  "string",
+                                                                                                      "maxLength":  4000,
+                                                                                                      "minLength":  0
+                                                                                                  },
+                                                                               "address":  {
+                                                                                               "type":  "string",
+                                                                                               "maxLength":  300,
+                                                                                               "minLength":  0
+                                                                                           },
+                                                                               "addressEn":  {
+                                                                                                 "type":  "string",
+                                                                                                 "maxLength":  300,
+                                                                                                 "minLength":  0
+                                                                                             },
+                                                                               "contactEmail":  {
+                                                                                                    "type":  "string",
+                                                                                                    "format":  "email",
+                                                                                                    "maxLength":  180,
+                                                                                                    "minLength":  0
+                                                                                                },
+                                                                               "contactPhone":  {
+                                                                                                    "type":  "string",
+                                                                                                    "pattern":  "[+0-9 ()-]{0,40}"
+                                                                                                },
+                                                                               "defaultLocale":  {
+                                                                                                     "type":  "string",
+                                                                                                     "minLength":  1,
+                                                                                                     "pattern":  "zh|en"
+                                                                                                 },
+                                                                               "supportUrl":  {
+                                                                                                  "type":  "string",
+                                                                                                  "maxLength":  500,
+                                                                                                  "minLength":  0,
+                                                                                                  "pattern":  "^$|https://[^\\s]+"
+                                                                                              }
+                                                                           },
+                                                            "required":  [
+                                                                             "address",
+                                                                             "addressEn",
+                                                                             "companyIntro",
+                                                                             "companyIntroEn",
+                                                                             "companyName",
+                                                                             "companyNameEn",
+                                                                             "contactEmail",
+                                                                             "contactPhone",
+                                                                             "defaultLocale",
+                                                                             "supportUrl"
+                                                                         ]
+                                                        },
+                                       "ResultSiteSettings":  {
+                                                                  "type":  "object",
+                                                                  "description":  "统一响应",
+                                                                  "properties":  {
+                                                                                     "code":  {
+                                                                                                  "type":  "integer",
+                                                                                                  "format":  "int32"
+                                                                                              },
+                                                                                     "msg":  {
+                                                                                                 "type":  "string"
+                                                                                             },
+                                                                                     "data":  {
+                                                                                                  "$ref":  "#/components/schemas/SiteSettings"
+                                                                                              }
+                                                                                 }
+                                                              },
+                                       "StatusRequest":  {
+                                                             "type":  "object",
+                                                             "properties":  {
+                                                                                "status":  {
+                                                                                               "type":  "string",
+                                                                                               "minLength":  1
+                                                                                           }
+                                                                            },
+                                                             "required":  [
+                                                                              "status"
+                                                                          ]
+                                                         },
+                                       "ResultVoid":  {
+                                                          "type":  "object",
+                                                          "description":  "统一响应",
+                                                          "properties":  {
+                                                                             "code":  {
+                                                                                          "type":  "integer",
+                                                                                          "format":  "int32"
+                                                                                      },
+                                                                             "msg":  {
+                                                                                         "type":  "string"
+                                                                                     },
+                                                                             "data":  {
+
+                                                                                      }
+                                                                         }
+                                                      },
+                                       "ContentRequest":  {
+                                                              "type":  "object",
+                                                              "description":  "内容编辑参数",
+                                                              "properties":  {
+                                                                                 "title":  {
+                                                                                               "type":  "string",
+                                                                                               "description":  "文章标题；articles必填，文章不使用name/nameEn",
+                                                                                               "maxLength":  120,
+                                                                                               "minLength":  0
+                                                                                           },
+                                                                                 "name":  {
+                                                                                              "type":  "string",
+                                                                                              "maxLength":  120,
+                                                                                              "minLength":  0
+                                                                                          },
+                                                                                 "nameEn":  {
+                                                                                                "type":  "string",
+                                                                                                "description":  "非文章内容的英文名称",
+                                                                                                "maxLength":  180,
+                                                                                                "minLength":  0
+                                                                                            },
+                                                                                 "category":  {
+                                                                                                  "type":  "string",
+                                                                                                  "maxLength":  80,
+                                                                                                  "minLength":  0
+                                                                                              },
+                                                                                 "brand":  {
+                                                                                               "type":  "string",
+                                                                                               "maxLength":  80,
+                                                                                               "minLength":  0
+                                                                                           },
+                                                                                 "status":  {
+                                                                                                "type":  "string",
+                                                                                                "minLength":  1,
+                                                                                                "pattern":  "DRAFT|PUBLISHED|ARCHIVED"
+                                                                                            },
+                                                                                 "description":  {
+                                                                                                     "type":  "string",
+                                                                                                     "description":  "内容，纯文本，选填",
+                                                                                                     "maxLength":  20000,
+                                                                                                     "minLength":  0
+                                                                                                 },
+                                                                                 "descriptionEn":  {
+                                                                                                       "type":  "string",
+                                                                                                       "description":  "英文内容，选填",
+                                                                                                       "maxLength":  20000,
+                                                                                                       "minLength":  0
+                                                                                                   },
+                                                                                 "imageId":  {
+                                                                                                 "type":  "string",
+                                                                                                 "pattern":  "[0-9a-fA-F-]{36}"
+                                                                                             }
+                                                                             },
+                                                              "required":  [
+                                                                               "status"
+                                                                           ]
+                                                          },
+                                       "ContentVo":  {
+                                                         "type":  "object",
+                                                         "description":  "内容管理信息，媒体仅返回URL不返回磁盘路径",
+                                                         "properties":  {
+                                                                            "id":  {
+                                                                                       "type":  "string"
+                                                                                   },
+                                                                            "kind":  {
+                                                                                         "type":  "string"
+                                                                                     },
+                                                                            "title":  {
+                                                                                          "type":  "string",
+                                                                                          "description":  "文章标题；仅articles返回"
+                                                                                      },
+                                                                            "name":  {
+                                                                                         "type":  "string"
+                                                                                     },
+                                                                            "nameEn":  {
+                                                                                           "type":  "string"
+                                                                                       },
+                                                                            "category":  {
+                                                                                             "type":  "string"
+                                                                                         },
+                                                                            "brand":  {
+                                                                                          "type":  "string"
+                                                                                      },
+                                                                            "status":  {
+                                                                                           "type":  "string"
+                                                                                       },
+                                                                            "description":  {
+                                                                                                "type":  "string"
+                                                                                            },
+                                                                            "descriptionEn":  {
+                                                                                                  "type":  "string"
+                                                                                              },
+                                                                            "imageId":  {
+                                                                                            "type":  "string"
+                                                                                        },
+                                                                            "imageUrl":  {
+                                                                                             "type":  "string"
+                                                                                         }
+                                                                        }
+                                                     },
+                                       "ResultContentVo":  {
+                                                               "type":  "object",
+                                                               "description":  "统一响应",
+                                                               "properties":  {
+                                                                                  "code":  {
+                                                                                               "type":  "integer",
+                                                                                               "format":  "int32"
+                                                                                           },
+                                                                                  "msg":  {
+                                                                                              "type":  "string"
+                                                                                          },
+                                                                                  "data":  {
+                                                                                               "$ref":  "#/components/schemas/ContentVo"
+                                                                                           }
+                                                                              }
+                                                           },
+                                       "Request":  {
+                                                       "type":  "object",
+                                                       "description":  "询盘参数",
+                                                       "properties":  {
+                                                                          "name":  {
+                                                                                       "type":  "string",
+                                                                                       "maxLength":  80,
+                                                                                       "minLength":  0
+                                                                                   },
+                                                                          "email":  {
+                                                                                        "type":  "string",
+                                                                                        "format":  "email",
+                                                                                        "maxLength":  180,
+                                                                                        "minLength":  0
+                                                                                    },
+                                                                          "phone":  {
+                                                                                        "type":  "string",
+                                                                                        "minLength":  1,
+                                                                                        "pattern":  "[+0-9 ()-]{1,40}"
+                                                                                    },
+                                                                          "message":  {
+                                                                                          "type":  "string",
+                                                                                          "maxLength":  4000,
+                                                                                          "minLength":  0
+                                                                                      },
+                                                                          "locale":  {
+                                                                                         "type":  "string",
+                                                                                         "minLength":  1,
+                                                                                         "pattern":  "zh|en"
+                                                                                     },
+                                                                          "country":  {
+                                                                                          "type":  "string",
+                                                                                          "maxLength":  80,
+                                                                                          "minLength":  0
+                                                                                      },
+                                                                          "industry":  {
+                                                                                           "type":  "string",
+                                                                                           "maxLength":  80,
+                                                                                           "minLength":  0
+                                                                                       },
+                                                                          "product":  {
+                                                                                          "type":  "string",
+                                                                                          "maxLength":  180,
+                                                                                          "minLength":  0
+                                                                                      },
+                                                                          "website":  {
+                                                                                          "type":  "string",
+                                                                                          "maxLength":  500,
+                                                                                          "minLength":  0,
+                                                                                          "pattern":  "^$|https?://[^\\s]+"
+                                                                                      },
+                                                                          "company":  {
+                                                                                          "type":  "string",
+                                                                                          "maxLength":  180,
+                                                                                          "minLength":  0
+                                                                                      }
+                                                                      },
+                                                       "required":  [
+                                                                        "email",
+                                                                        "locale",
+                                                                        "message",
+                                                                        "name",
+                                                                        "phone"
+                                                                    ]
+                                                   },
+                                       "ResultString":  {
+                                                            "type":  "object",
+                                                            "description":  "统一响应",
+                                                            "properties":  {
+                                                                               "code":  {
+                                                                                            "type":  "integer",
+                                                                                            "format":  "int32"
+                                                                                        },
+                                                                               "msg":  {
+                                                                                           "type":  "string"
+                                                                                       },
+                                                                               "data":  {
+                                                                                            "type":  "string"
+                                                                                        }
+                                                                           }
+                                                        },
+                                       "LoginRequest":  {
+                                                            "type":  "object",
+                                                            "description":  "登录参数",
+                                                            "properties":  {
+                                                                               "username":  {
+                                                                                                "type":  "string",
+                                                                                                "maxLength":  80,
+                                                                                                "minLength":  0
+                                                                                            },
+                                                                               "password":  {
+                                                                                                "type":  "string",
+                                                                                                "maxLength":  200,
+                                                                                                "minLength":  0
+                                                                                            }
+                                                                           },
+                                                            "required":  [
+                                                                             "password",
+                                                                             "username"
+                                                                         ]
+                                                        },
+                                       "ResultUserVo":  {
+                                                            "type":  "object",
+                                                            "description":  "统一响应",
+                                                            "properties":  {
+                                                                               "code":  {
+                                                                                            "type":  "integer",
+                                                                                            "format":  "int32"
+                                                                                        },
+                                                                               "msg":  {
+                                                                                           "type":  "string"
+                                                                                       },
+                                                                               "data":  {
+                                                                                            "$ref":  "#/components/schemas/UserVo"
+                                                                                        }
+                                                                           }
+                                                        },
+                                       "UserVo":  {
+                                                      "type":  "object",
+                                                      "properties":  {
+                                                                         "username":  {
+                                                                                          "type":  "string"
+                                                                                      },
+                                                                         "role":  {
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                     }
+                                                  },
+                                       "MediaVo":  {
+                                                       "type":  "object",
+                                                       "description":  "媒体信息；私有资源仅通过认证接口下载",
+                                                       "properties":  {
+                                                                          "id":  {
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                          "originalName":  {
+                                                                                               "type":  "string"
+                                                                                           },
+                                                                          "contentType":  {
+                                                                                              "type":  "string"
+                                                                                          },
+                                                                          "sizeBytes":  {
+                                                                                            "type":  "integer",
+                                                                                            "format":  "int64"
+                                                                                        },
+                                                                          "published":  {
+                                                                                            "type":  "boolean"
+                                                                                        },
+                                                                          "url":  {
+                                                                                      "type":  "string"
+                                                                                  }
+                                                                      }
+                                                   },
+                                       "ResultMediaVo":  {
+                                                             "type":  "object",
+                                                             "description":  "统一响应",
+                                                             "properties":  {
+                                                                                "code":  {
+                                                                                             "type":  "integer",
+                                                                                             "format":  "int32"
+                                                                                         },
+                                                                                "msg":  {
+                                                                                            "type":  "string"
+                                                                                        },
+                                                                                "data":  {
+                                                                                             "$ref":  "#/components/schemas/MediaVo"
+                                                                                         }
+                                                                            }
+                                                         },
+                                       "ResultListContentVo":  {
+                                                                   "type":  "object",
+                                                                   "description":  "统一响应",
+                                                                   "properties":  {
+                                                                                      "code":  {
+                                                                                                   "type":  "integer",
+                                                                                                   "format":  "int32"
+                                                                                               },
+                                                                                      "msg":  {
+                                                                                                  "type":  "string"
+                                                                                              },
+                                                                                      "data":  {
+                                                                                                   "type":  "array",
+                                                                                                   "items":  {
+                                                                                                                 "$ref":  "#/components/schemas/ContentVo"
+                                                                                                             }
+                                                                                               }
+                                                                                  }
+                                                               },
+                                       "CsrfToken":  {
+                                                         "type":  "object",
+                                                         "properties":  {
+                                                                            "parameterName":  {
+                                                                                                  "type":  "string"
+                                                                                              },
+                                                                            "token":  {
+                                                                                          "type":  "string"
+                                                                                      },
+                                                                            "headerName":  {
+                                                                                               "type":  "string"
+                                                                                           }
+                                                                        }
+                                                     },
+                                       "ResultTokenVo":  {
+                                                             "type":  "object",
+                                                             "description":  "统一响应",
+                                                             "properties":  {
+                                                                                "code":  {
+                                                                                             "type":  "integer",
+                                                                                             "format":  "int32"
+                                                                                         },
+                                                                                "msg":  {
+                                                                                            "type":  "string"
+                                                                                        },
+                                                                                "data":  {
+                                                                                             "$ref":  "#/components/schemas/TokenVo"
+                                                                                         }
+                                                                            }
+                                                         },
+                                       "TokenVo":  {
+                                                       "type":  "object",
+                                                       "description":  "CSRF请求头及令牌",
+                                                       "properties":  {
+                                                                          "headerName":  {
+                                                                                             "type":  "string"
+                                                                                         },
+                                                                          "token":  {
+                                                                                        "type":  "string"
+                                                                                    }
+                                                                      }
+                                                   },
+                                       "ResultListMediaVo":  {
+                                                                 "type":  "object",
+                                                                 "description":  "统一响应",
+                                                                 "properties":  {
+                                                                                    "code":  {
+                                                                                                 "type":  "integer",
+                                                                                                 "format":  "int32"
+                                                                                             },
+                                                                                    "msg":  {
+                                                                                                "type":  "string"
+                                                                                            },
+                                                                                    "data":  {
+                                                                                                 "type":  "array",
+                                                                                                 "items":  {
+                                                                                                               "$ref":  "#/components/schemas/MediaVo"
+                                                                                                           }
+                                                                                             }
+                                                                                }
+                                                             },
+                                       "ResultListVo":  {
+                                                            "type":  "object",
+                                                            "description":  "统一响应",
+                                                            "properties":  {
+                                                                               "code":  {
+                                                                                            "type":  "integer",
+                                                                                            "format":  "int32"
+                                                                                        },
+                                                                               "msg":  {
+                                                                                           "type":  "string"
+                                                                                       },
+                                                                               "data":  {
+                                                                                            "type":  "array",
+                                                                                            "items":  {
+                                                                                                          "$ref":  "#/components/schemas/Vo"
+                                                                                                      }
+                                                                                        }
+                                                                           }
+                                                        },
+                                       "Vo":  {
+                                                  "type":  "object",
+                                                  "properties":  {
+                                                                     "id":  {
+                                                                                "type":  "string"
+                                                                            },
+                                                                     "name":  {
+                                                                                  "type":  "string"
+                                                                              },
+                                                                     "email":  {
+                                                                                   "type":  "string"
+                                                                               },
+                                                                     "phone":  {
+                                                                                   "type":  "string"
+                                                                               },
+                                                                     "message":  {
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                     "locale":  {
+                                                                                    "type":  "string"
+                                                                                },
+                                                                     "status":  {
+                                                                                    "type":  "string"
+                                                                                },
+                                                                     "country":  {
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                     "industry":  {
+                                                                                      "type":  "string"
+                                                                                  },
+                                                                     "product":  {
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                     "website":  {
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                     "company":  {
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                     "createdAt":  {
+                                                                                       "type":  "string",
+                                                                                       "format":  "date-time",
+                                                                                       "description":  "提交时间，按服务器数据库时间显示"
+                                                                                   }
+                                                                 }
+                                              },
+                                       "ResultVo":  {
+                                                        "type":  "object",
+                                                        "description":  "统一响应",
+                                                        "properties":  {
+                                                                           "code":  {
+                                                                                        "type":  "integer",
+                                                                                        "format":  "int32"
+                                                                                    },
+                                                                           "msg":  {
+                                                                                       "type":  "string"
+                                                                                   },
+                                                                           "data":  {
+                                                                                        "$ref":  "#/components/schemas/Vo"
+                                                                                    }
+                                                                       }
+                                                    },
+                                       "StreamingResponseBody":  {
+
+                                                                 }
+                                   },
+                       "securitySchemes":  {
+                                               "session":  {
+                                                               "type":  "apiKey",
+                                                               "name":  "GWWSESSION",
+                                                               "in":  "cookie"
+                                                           }
+                                           }
+                   }
+}

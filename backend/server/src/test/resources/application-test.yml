@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:gww;MODE=MySQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  flyway:
+    enabled: false
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/migration/V1__initial.sql,classpath:db/migration/V2__inquiry_contact_fields.sql
+  cache:
+    type: simple
+app:
+  admin:
+    username: admin
+    # 测试专用BCrypt哈希，无生产默认密码。
+    password-hash: "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy"
+springdoc:
+  api-docs:
+    enabled: true

@@ -26,11 +26,11 @@ test("routes reject unknown detail pages and invalid nesting", () => {
     assert.equal(resolvePath(["products", product.id])?.type, "product");
   assert.equal(resolvePath(["products", "unknown"]), null);
   assert.equal(resolvePath(["about", "extra"]), null);
-  assert.equal(resolvePath(["news", "choosing-materials"]), null);
-  assert.equal(
-    resolvePath(["knowledge", "choosing-materials"])?.type,
-    "article",
-  );
+  assert.equal(resolvePath(["news", "choosing-materials"])?.type, "article");
+  assert.equal(resolvePath(["knowledge", "choosing-materials"]), null);
+  assert.equal(resolvePath(["knowledge"]), null);
+  assert.equal(resolvePath(["honors"]), null);
+  assert.equal(resolvePath(["contact"])?.type, "contact");
 });
 
 test("both languages have the same interface keys", () => {
