@@ -1,19 +1,122 @@
-# Merge into a separately authorized test virtual host, not over an existing site.
+# GWW 官网 Nginx 配置示例
+# 使用方法：复制到 /etc/nginx/conf.d/gww.conf 或合并到现有站点配置
+# 将 yourdomain.com 替换为真实域名，证书路径按实际安装位置调整
+
+# =============================================
+# 1. HTTP → HTTPS 强制跳转
+# =============================================
 server {
     listen 80;
-    server_name test.example.com;
-    client_max_body_size 1m;
+    listen [::]:80;
+    server_name yourdomain.com www.yourdomain.com;
 
-    add_header X-Content-Type-Options nosniff always;
-    add_header Referrer-Policy strict-origin-when-cross-origin always;
+    # 301 永久跳转到 HTTPS（保留完整路径和查询参数）
+    return 301 https://www.yourdomain.com$request_uri;
+}
 
+# =============================================
+# 2. HTTPS 主站点
+# =============================================
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name www.yourdomain.com yourdomain.com;
+
+    # 根域名也跳转到 www（统一域名，避免重复内容）
+    if ($host = yourdomain.com) {
+        return 301 https://www.yourdomain.com$request_uri;
+    }
+
+    # ---------- SSL 证书（Let's Encrypt 自动续期）----------
+    ssl_certificate     /etc/letsencrypt/live/www.yourdomain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/www.yourdomain.com/privkey.pem;
+
+    # SSL 性能优化
+    ssl_session_cache   shared:SSL:10m;
+    ssl_session_timeout 1d;
+    ssl_session_tickets  off;
+
+    # TLS 配置（兼容主流浏览器 + 安全性）
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers   HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers off;
+
+    # HSTS：告诉浏览器以后只走 HTTPS（一年）
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+
+    # ---------- 安全响应头 ----------
+    add_header X-Content-Type-Options     nosniff always;
+    add_header X-Frame-Options            SAMEORIGIN always;
+    add_header X-XSS-Protection           "1; mode=block" always;
+    add_header Referrer-Policy            strict-origin-when-cross-origin always;
+    add_header Permissions-Policy         "camera=(), microphone=(), geolocation=()" always;
+
+    # ---------- 反代到 Nuxt SSR ----------
+    # Nuxt 默认 3100 端口，部署时按实际调整
     location / {
         proxy_pass http://127.0.0.1:3100;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_connect_timeout 5s;
-        proxy_read_timeout 60s;
+        proxy_set_header X-Forwarded-Host  $host;
+        proxy_set_header X-Forwarded-Port  $server_port;
+
+        # 超时（SSR 渲染可能稍慢）
+        proxy_connect_timeout  5s;
+        proxy_read_timeout    60s;
+        proxy_send_timeout    60s;
     }
+
+    # ---------- 静态资源缓存 ----------
+    # Nuxt SSR 产物的静态资源（_nuxt/ 下全是带 hash 的文件名，可永久缓存）
+    location /_nuxt/ {
+        alias /var/www/gww/.output/public/_nuxt/;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        access_log off;
+    }
+
+    # robots.txt / sitemap.xml 是运行时动态生成的，走反代（不缓存或短缓存）
+    location = /robots.txt {
+        proxy_pass http://127.0.0.1:3100;
+        expires 1h;
+        add_header Cache-Control "public";
+    }
+    location = /sitemap.xml {
+        proxy_pass http://127.0.0.1:3100;
+        expires 1h;
+        add_header Cache-Control "public";
+    }
+
+    # 通用静态资源（图片/字体/视频等）缓存 1 周
+    location ~* \.(jpg|jpeg|png|webp|gif|svg|ico|woff2?|ttf|eot|mp4|mp3)$ {
+        alias /var/www/gww/.output/public/;
+        expires 7d;
+        add_header Cache-Control "public";
+        access_log off;
+    }
+
+    # ---------- 后端 Java API 反代 ----------
+    # 前端 /api/* 请求转发到 Spring Boot（8083 端口）
+    location /api/ {
+        proxy_pass http://127.0.0.1:8083;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # API 不缓存（内容实时性）
+        add_header Cache-Control "no-cache" always;
+    }
+
+    # ---------- 禁止访问隐藏文件 ----------
+    location ~ /\. {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+
+    # ---------- 上传大小限制 ----------
+    client_max_body_size 5m;
 }

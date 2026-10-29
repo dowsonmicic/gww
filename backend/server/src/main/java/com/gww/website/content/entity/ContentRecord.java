@@ -17,4 +17,6 @@ public class ContentRecord {
   private String description;
   private String descriptionEn;
   private String imageId;
+  /** JSON 字符串，MyBatis 直接读写；Jackson 在接口层处理 ↔ List 互转。 */
+  private String sections;
 }

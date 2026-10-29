@@ -8,6 +8,11 @@ spring:
     password: 123456
   flyway:
     enabled: true
+    # 本地开发专用：修改了已执行的 migration 文件后，启动时自动 repair checksum
+    # 生产环境(prod/dev profile)绝对不能开——会掩盖 schema 漂移问题
+    repair-on-migrate: true
+server:
+  port: 8083
 
 app:
   admin:

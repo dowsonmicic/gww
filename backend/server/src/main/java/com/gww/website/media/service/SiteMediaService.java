@@ -57,7 +57,7 @@ public class SiteMediaService {
         || !Set.of("image/jpeg", "image/png", "image/webp").contains(image.getContentType()))
       throw new BusinessException(HttpStatus.BAD_REQUEST, "请选择已发布的JPG/PNG/WebP图片");
     mapper.saveSiteMedia(new ContentRecord("site-media-" + slot, "settings", slot, slot,
-        "", "", "PUBLISHED", "", "", image.getId()));
+        "", "", "PUBLISHED", "", "", image.getId(), null));
     log.info("官网媒体替换 slot={} imageId={}", slot, image.getId());
     return get(slot);
   }

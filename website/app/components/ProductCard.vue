@@ -14,20 +14,14 @@ defineProps<{
 <template>
   <NuxtLink class="product-card" :to="`/${locale}/products/${product.id}`">
     <div class="product-image">
-      <img
-        v-if="product.image"
-        :src="product.image"
-        :alt="`${product.category} ${product.model}`"
-        width="300"
-        height="300"
-        loading="lazy"
-      /><span>{{ product.category }}</span>
+      <img v-if="product.image" :src="product.image" :alt="`${product.brand} ${product.model}`" width="300" height="300"
+        loading="lazy" /><span>{{ product.brand }}</span>
     </div>
     <div class="product-info">
       <p>
-        {{ product.brand }}
+        {{ product.category }}
       </p>
-      <h3>{{ product.category }} {{ product.model }}</h3>
+      <h3>{{ product.brand }} {{ product.model }}</h3>
       <div>{{ text[locale].detail }} <span>↗</span></div>
     </div>
   </NuxtLink>

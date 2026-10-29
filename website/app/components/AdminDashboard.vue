@@ -138,7 +138,7 @@ async function loadRecords() {
     }
     records[kind] = rows.map((row) => ({
       ...row,
-      name: kind === "articles" ? row.title || "" : row.name || "",
+      name: row.name || "",
       nameEn: row.nameEn || "",
       image: row.imageId ? `/api/admin/media/${row.imageId}/file` : "",
     }));
@@ -194,6 +194,12 @@ onMounted(async () => {
   }
 });
 
+type SectionItem = {
+  title?: string;
+  titleEn?: string;
+  body?: string;
+  bodyEn?: string;
+};
 type Row = {
   id: string;
   name: string;
@@ -205,13 +211,14 @@ type Row = {
   image?: string;
   imageId?: string | null;
   descriptionEn?: string;
+  sections?: SectionItem[];
 };
 const menus = [
   { id: "overview", name: "工作台", icon: "▦" },
   { id: "products", name: "产品管理", icon: "▤" },
+  { id: "articles", name: "资讯管理", icon: "✎" },
   { id: "categories", name: "分类与品牌", icon: "◇" },
   { id: "media", name: "媒体资源", icon: "▧" },
-  { id: "articles", name: "文章管理", icon: "≡" },
   { id: "inquiries", name: "客户询盘", icon: "○" },
   { id: "settings", name: "网站设置", icon: "⚙" },
 ];
@@ -284,6 +291,10 @@ const form = reactive<Row>({
   brand: "",
   status: "DRAFT",
   description: "",
+  descriptionEn: "",
+  imageId: null,
+  image: "",
+  sections: [],
 });
 function openEditor(row?: Row) {
   productFile.value = null;
@@ -301,18 +312,15 @@ function openEditor(row?: Row) {
       descriptionEn: "",
       imageId: null,
       image: "",
+      sections: [] as SectionItem[],
     },
   );
+  if (!form.sections) form.sections = [];
   dialog.value = true;
 }
 async function save() {
-  if (
-    !form.name.trim() ||
-    (selected.value !== "articles" && !form.nameEn.trim())
-  ) {
-    ElMessage.warning(
-      selected.value === "articles" ? "请填写标题" : "请填写中文和英文名称",
-    );
+  if (!form.name.trim() || !form.nameEn.trim()) {
+    ElMessage.warning("请填写中文和英文名称");
     return;
   }
   busy.value = true;
@@ -333,15 +341,18 @@ async function save() {
     }
     const path = `/api/admin/content/${recordKey.value}${editId.value ? `/${editId.value}` : ""}`;
     await api.request(path, editId.value ? "PUT" : "POST", {
-      ...(recordKey.value === "articles"
-        ? { title: form.name.trim() }
-        : { name: form.name.trim(), nameEn: form.nameEn.trim() }),
+      name: form.name.trim(),
+      nameEn: form.nameEn.trim(),
       category: form.category.trim(),
       brand: form.brand.trim(),
       status: form.status,
       description: form.description,
       descriptionEn: form.descriptionEn || "",
       imageId,
+      sections:
+        (recordKey.value === "products" || recordKey.value === "articles") && form.sections?.length
+          ? form.sections
+          : null,
     });
     dialog.value = false;
     page.value = 1;
@@ -416,11 +427,11 @@ async function loadMedia() {
       const server = list.find((s) => s.id === slot.id);
       return server
         ? {
-            ...slot,
-            url: server.url,
-            imageId: server.imageId,
-            local: false,
-          }
+          ...slot,
+          url: server.url,
+          imageId: server.imageId,
+          local: false,
+        }
         : slot;
     });
   } catch (error) {
@@ -546,23 +557,14 @@ async function saveSettings() {
     <p>产品和文章读取Java/MySQL，不使用静态演示记录。</p>
     <p v-if="!ready">正在检查登录状态…</p>
     <ElForm v-else label-position="top" @submit.prevent="login">
-      <ElFormItem label="账号"
-        ><ElInput
-          v-model="loginForm.username"
-          aria-label="管理员账号"
-          autocomplete="username"
-      /></ElFormItem>
-      <ElFormItem label="密码"
-        ><ElInput
-          v-model="loginForm.password"
-          aria-label="管理员密码"
-          type="password"
-          show-password
-          autocomplete="current-password"
-      /></ElFormItem>
-      <ElButton native-type="submit" type="primary" :loading="busy"
-        >登录</ElButton
-      >
+      <ElFormItem label="账号">
+        <ElInput v-model="loginForm.username" aria-label="管理员账号" autocomplete="username" />
+      </ElFormItem>
+      <ElFormItem label="密码">
+        <ElInput v-model="loginForm.password" aria-label="管理员密码" type="password" show-password
+          autocomplete="current-password" />
+      </ElFormItem>
+      <ElButton native-type="submit" type="primary" :loading="busy">登录</ElButton>
     </ElForm>
     <p v-if="feedback" role="alert">{{ feedback }}</p>
   </section>
@@ -573,43 +575,27 @@ async function saveSettings() {
         <div>官网管理<small>CONTENT WORKSPACE</small></div>
       </div>
       <div class="admin-menu-label">内容与业务</div>
-      <button
-        v-for="menu in menus"
-        :key="menu.id"
-        class="admin-nav-item"
-        :class="{ active: selected === menu.id }"
-        :aria-current="selected === menu.id ? 'page' : undefined"
-        @click="
+      <button v-for="menu in menus" :key="menu.id" class="admin-nav-item" :class="{ active: selected === menu.id }"
+        :aria-current="selected === menu.id ? 'page' : undefined" @click="
           selected = menu.id;
-          mobileOpen = false;
-        "
-      >
-        <span>{{ menu.icon }}</span
-        >{{ menu.name }}
+        mobileOpen = false;
+        ">
+        <span>{{ menu.icon }}</span>{{ menu.name }}
       </button>
       <div class="admin-sidebar-bottom">
-        <span class="admin-dot" /> Java 数据接口<small
-          >产品/文章来自数据库</small
-        >
+        <span class="admin-dot" /> Java 数据接口<small>产品/文章来自数据库</small>
       </div>
     </aside>
     <div class="admin-workspace">
       <header class="admin-header">
         <div>
-          <button
-            class="admin-mobile-toggle"
-            :aria-expanded="mobileOpen"
-            aria-label="后台菜单"
-            @click="mobileOpen = !mobileOpen"
-          >
-            ☰</button
-          ><span>管理控制台</span><span class="admin-divider">/</span
-          ><strong>{{ heading }}</strong>
+          <button class="admin-mobile-toggle" :aria-expanded="mobileOpen" aria-label="后台菜单"
+            @click="mobileOpen = !mobileOpen">
+            ☰</button><span>管理控制台</span><span class="admin-divider">/</span><strong>{{ heading }}</strong>
         </div>
         <div>
-          <NuxtLink to="/zh" class="admin-site-link">查看官网 ↗</NuxtLink
-          ><span>{{ user }}</span
-          ><ElButton @click="logout">退出登录</ElButton>
+          <NuxtLink to="/zh" class="admin-site-link">查看官网 ↗</NuxtLink><span>{{ user }}</span>
+          <ElButton @click="logout">退出登录</ElButton>
         </div>
       </header>
       <main class="admin-main">
@@ -627,58 +613,46 @@ async function saveSettings() {
 
         <template v-if="selected === 'overview'">
           <div class="admin-stats">
-            <div
-              v-for="item in [
-                {
-                  label: '数据库产品',
-                  count: records.products?.length || 0,
-                  note: 'Java API实时读取',
-                },
-                {
-                  label: '文章内容',
-                  count: records.articles?.length || 0,
-                  note: '新闻与材料知识',
-                },
-                {
-                  label: '媒体资源',
-                  count: media.length,
-                  note: '含本次会话预览',
-                },
-                {
-                  label: '真实询盘',
-                  count: inquiries.length,
-                  note: 'Java API读取',
-                },
-              ]"
-              :key="item.label"
-            >
-              <span>{{ item.label }}</span
-              ><strong>{{ item.count }}</strong
-              ><small>{{ item.note }}</small>
+            <div v-for="item in [
+              {
+                label: '数据库产品',
+                count: records.products?.length || 0,
+                note: 'Java API实时读取',
+              },
+              {
+                label: '媒体资源',
+                count: media.length,
+                note: '含本次会话预览',
+              },
+              {
+                label: '真实询盘',
+                count: inquiries.length,
+                note: 'Java API读取',
+              },
+            ]" :key="item.label">
+              <span>{{ item.label }}</span><strong>{{ item.count }}</strong><small>{{ item.note }}</small>
             </div>
           </div>
           <div class="admin-overview-grid">
             <section class="admin-panel">
               <h2>常用操作</h2>
               <div class="admin-quick-grid">
-                <button
-                  v-for="menu in menus.slice(1, 5)"
-                  :key="menu.id"
-                  @click="selected = menu.id"
-                >
-                  <span>{{ menu.icon }}</span
-                  ><strong>{{ menu.name }}</strong
-                  ><small>进入管理 →</small>
+                <button v-for="menu in menus.slice(1, 5)" :key="menu.id" @click="selected = menu.id">
+                  <span>{{ menu.icon }}</span><strong>{{ menu.name }}</strong><small>进入管理 →</small>
                 </button>
               </div>
             </section>
             <section class="admin-panel">
               <h2>接入进度</h2>
               <ul class="admin-progress">
-                <li>官网与后台展示界面 <ElTag type="success">已实现</ElTag></li>
-                <li>Java / MySQL <ElTag type="success">已接入</ElTag></li>
-                <li>登录与服务端权限 <ElTag type="success">已接入</ElTag></li>
-                <li>服务器媒体目录 <ElTag type="warning">待核实</ElTag></li>
+                <li>官网与后台展示界面 <ElTag type="success">已实现</ElTag>
+                </li>
+                <li>Java / MySQL <ElTag type="success">已接入</ElTag>
+                </li>
+                <li>登录与服务端权限 <ElTag type="success">已接入</ElTag>
+                </li>
+                <li>服务器媒体目录 <ElTag type="warning">待核实</ElTag>
+                </li>
               </ul>
               <p class="admin-muted">
                 保留已有宝塔站点配置，不默认新建目录或重装 Nginx。
@@ -687,176 +661,91 @@ async function saveSettings() {
           </div>
           <section class="admin-panel">
             <h2>数据库产品</h2>
-            <ElTable :data="records.products?.slice(0, 4)"
-              ><ElTableColumn prop="name" label="产品名称" /><ElTableColumn
-                prop="category"
-                label="类别"
-              /><ElTableColumn prop="brand" label="品牌" /><ElTableColumn
-                label="状态"
-                ><template #default
-                  ><ElTag type="info">数据库记录</ElTag></template
-                ></ElTableColumn
-              ></ElTable
-            >
+            <ElTable :data="records.products?.slice(0, 4)">
+              <ElTableColumn prop="name" label="产品名称" />
+              <ElTableColumn prop="category" label="类别" />
+              <ElTableColumn prop="brand" label="品牌" />
+              <ElTableColumn label="状态"><template #default>
+                  <ElTag type="info">数据库记录</ElTag>
+                </template></ElTableColumn>
+            </ElTable>
           </section>
         </template>
 
         <section v-else-if="selected === 'categories'" class="admin-panel">
           <div class="admin-tabs">
-            <button
-              :class="{ active: categoryTab === 'categories' }"
-              @click="categoryTab = 'categories'"
-            >
+            <button :class="{ active: categoryTab === 'categories' }" @click="categoryTab = 'categories'">
               材料分类
             </button>
-            <button
-              :class="{ active: categoryTab === 'brands' }"
-              @click="categoryTab = 'brands'"
-            >
+            <button :class="{ active: categoryTab === 'brands' }" @click="categoryTab = 'brands'">
               品牌目录
             </button>
           </div>
           <p class="admin-muted">
             仅展示产品管理中已有的分类与品牌及产品数量，不提供新增、编辑或删除。请在产品编辑中填写分类和品牌。
           </p>
-          <ElInput
-            v-model="search"
-            placeholder="搜索分类或品牌"
-            aria-label="类型搜索"
-            clearable
-          />
+          <ElInput v-model="search" placeholder="搜索分类或品牌" aria-label="类型搜索" clearable />
           <ElTable :data="productTypes" empty-text="产品中暂无对应类型">
-            <ElTableColumn
-              prop="name"
-              :label="categoryTab === 'categories' ? '材料分类' : '品牌'"
-            />
+            <ElTableColumn prop="name" :label="categoryTab === 'categories' ? '材料分类' : '品牌'" />
             <ElTableColumn prop="count" label="产品数量" />
           </ElTable>
         </section>
-        <section
-          v-else-if="['products', 'articles'].includes(selected)"
-          class="admin-panel"
-        >
+        <section v-else-if="selected === 'products' || selected === 'articles'" class="admin-panel">
           <div class="admin-toolbar">
-            <ElInput
-              v-model="search"
-              placeholder="搜索名称、分类、品牌或编号"
-              clearable
-              aria-label="后台搜索"
-            /><ElSelect
-              v-model="status"
-              placeholder="全部状态"
-              clearable
-              aria-label="内容状态"
-              ><ElOption
-                v-for="(label, value) in statusLabels"
-                :key="value"
-                :label="label"
-                :value="value" /></ElSelect
-            ><ElSelect
-              v-model="categoryFilter"
-              placeholder="全部分类"
-              clearable
-              aria-label="分类筛选"
-            >
-              <ElOption
-                v-for="item in filterCategories"
-                :key="item"
-                :label="item"
-                :value="item"
-              /> </ElSelect
-            ><ElButton
-              @click="
-                search = '';
-                status = '';
-                categoryFilter = '';
-              "
-              >重置</ElButton
-            ><ElButton type="primary" @click="openEditor()">新增</ElButton>
+            <ElInput v-model="search" :placeholder="selected === 'products' ? '搜索名称、分类、品牌或编号' : '搜索文章标题或分类'" clearable aria-label="后台搜索" />
+            <ElSelect v-model="status" placeholder="全部状态" clearable aria-label="内容状态">
+              <ElOption v-for="(label, value) in statusLabels" :key="value" :label="label" :value="value" />
+            </ElSelect>
+            <ElSelect v-if="selected === 'products'" v-model="categoryFilter" placeholder="全部分类" clearable aria-label="分类筛选">
+              <ElOption v-for="item in filterCategories" :key="item" :label="item" :value="item" />
+            </ElSelect>
+            <ElButton @click="
+              search = '';
+            status = '';
+            categoryFilter = '';
+            ">重置</ElButton>
+            <ElButton type="primary" @click="openEditor()">新增{{ selected === 'products' ? '产品' : '文章' }}</ElButton>
           </div>
-          <ElTable :data="paged" empty-text="暂无匹配内容"
-            ><ElTableColumn
-              v-if="selected === 'products'"
-              label="产品图片"
-              width="100"
-            >
+          <ElTable :data="paged" empty-text="暂无匹配内容">
+            <ElTableColumn v-if="selected === 'products'" label="产品图片" width="100">
               <template #default="{ row }">
-                <img
-                  v-if="row.image"
-                  :src="row.image"
-                  :alt="row.name"
-                  class="admin-product-image"
-                />
+                <img v-if="row.image" :src="row.image" :alt="row.name" class="admin-product-image" />
                 <span v-else>未设置</span>
-              </template> </ElTableColumn
-            ><ElTableColumn
-              prop="name"
-              :label="selected === 'articles' ? '标题' : '中文名称'"
-              min-width="170"
-            /><ElTableColumn
-              v-if="selected !== 'articles'"
-              prop="nameEn"
-              label="英文名称"
-              min-width="170"
-            /><ElTableColumn
-              v-if="selected === 'products'"
-              prop="brand"
-              label="品牌"
-              width="100"
-            /><ElTableColumn
-              v-if="selected !== 'categories'"
-              prop="category"
-              label="分类"
-              width="110"
-            /><ElTableColumn label="状态" width="110"
-              ><template #default="{ row }"
-                ><ElTag :type="row.status === 'DRAFT' ? 'warning' : 'info'">{{
+              </template>
+            </ElTableColumn>
+            <ElTableColumn :label="selected === 'products' ? '中文型号' : '中文标题'" prop="name" min-width="170" />
+            <ElTableColumn :label="selected === 'products' ? '英文型号' : '英文标题'" prop="nameEn" min-width="170" />
+            <ElTableColumn v-if="selected === 'products'" prop="brand" label="品牌" width="100" />
+            <ElTableColumn prop="category" label="分类" width="110" />
+            <ElTableColumn label="状态" width="110"><template #default="{ row }">
+                <ElTag :type="row.status === 'DRAFT' ? 'warning' : 'info'">{{
                   statusLabels[row.status] || row.status
-                }}</ElTag></template
-              ></ElTableColumn
-            ><ElTableColumn label="操作" width="140"
-              ><template #default="{ row }"
-                ><ElButton link type="primary" @click="openEditor(row as Row)"
-                  >编辑</ElButton
-                ><ElButton link type="danger" @click="remove(row as Row)"
-                  >删除</ElButton
-                ></template
-              ></ElTableColumn
-            ></ElTable
-          >
+                }}</ElTag>
+              </template></ElTableColumn>
+            <ElTableColumn label="操作" width="140"><template #default="{ row }">
+                <ElButton link type="primary" @click="openEditor(row as Row)">编辑</ElButton>
+                <ElButton link type="danger" @click="remove(row as Row)">删除</ElButton>
+              </template></ElTableColumn>
+          </ElTable>
           <div class="admin-pagination">
-            <span>共 {{ filtered.length }} 条数据库记录</span
-            ><ElPagination
-              v-model:current-page="page"
-              :page-size="5"
-              :total="filtered.length"
-              layout="prev, pager, next"
-            />
+            <span>共 {{ filtered.length }} 条数据库记录</span>
+            <ElPagination v-model:current-page="page" :page-size="5" :total="filtered.length"
+              layout="prev, pager, next" />
           </div>
         </section>
 
         <template v-else-if="selected === 'media'">
           <section class="admin-panel">
             <div class="admin-tabs">
-              <button
-                :class="{ active: mediaTab === 'carousel' }"
-                @click="mediaTab = 'carousel'"
-              >
+              <button :class="{ active: mediaTab === 'carousel' }" @click="mediaTab = 'carousel'">
                 轮播图
               </button>
-              <button
-                :class="{ active: mediaTab === 'partners' }"
-                @click="mediaTab = 'partners'"
-              >
+              <button :class="{ active: mediaTab === 'partners' }" @click="mediaTab = 'partners'">
                 合作商标
               </button>
             </div>
             <div class="admin-toolbar">
-              <ElInput
-                v-model="mediaSearch"
-                placeholder="搜索文件名"
-                aria-label="搜索媒体"
-              />
+              <ElInput v-model="mediaSearch" placeholder="搜索文件名" aria-label="搜索媒体" />
             </div>
             <p class="admin-muted">
               固定位置仅提供替换，不新增或删除。产品图片请到产品管理维护。替换时直接上传并写入数据库，最大20MB。
@@ -865,21 +754,14 @@ async function saveSettings() {
               <article v-for="item in mediaList" :key="item.id">
                 <img :src="item.url" :alt="item.name" />
                 <div>
-                  <strong>{{ item.name }}</strong
-                  ><small
-                    >{{ item.local ? "本机临时预览" : item.imageId ? "已上传数据库" : "项目静态素材" }} ·
+                  <strong>{{ item.name }}</strong><small>{{ item.local ? "本机临时预览" : item.imageId ? "已上传数据库" : "项目静态素材"
+                  }} ·
                     {{
                       item.group === "carousel" ? "轮播图" : "合作商标"
-                    }}</small
-                  >
-                  <label class="admin-file-button"
-                    >修改图片
-                    <input
-                      type="file"
-                      :aria-label="`修改${item.name}`"
-                      accept=".jpg,.jpeg,.png,.webp"
-                      @change="replaceMedia(item, $event)"
-                    />
+                    }}</small>
+                  <label class="admin-file-button">修改图片
+                    <input type="file" :aria-label="`修改${item.name}`" accept=".jpg,.jpeg,.png,.webp"
+                      @change="replaceMedia(item, $event)" />
                   </label>
                 </div>
               </article>
@@ -894,16 +776,10 @@ async function saveSettings() {
             <button :class="{ active: inquiryLocale === '' }" @click="inquiryLocale = ''">
               全部询盘
             </button>
-            <button
-              :class="{ active: inquiryLocale === 'zh' }"
-              @click="inquiryLocale = 'zh'"
-            >
+            <button :class="{ active: inquiryLocale === 'zh' }" @click="inquiryLocale = 'zh'">
               中文询盘
             </button>
-            <button
-              :class="{ active: inquiryLocale === 'en' }"
-              @click="inquiryLocale = 'en'"
-            >
+            <button :class="{ active: inquiryLocale === 'en' }" @click="inquiryLocale = 'en'">
               English 询盘
             </button>
           </div>
@@ -914,7 +790,8 @@ async function saveSettings() {
             <ElButton :loading="loadingInquiries" @click="queryInquiries">查询</ElButton>
             <ElButton type="primary" :loading="exportingInquiries" @click="exportInquiries">导出 Excel</ElButton>
           </div>
-          <p class="admin-muted">{{ loadingInquiries ? '正在查询…' : `共 ${visibleInquiries.length} 条` }}，按数据库 created_at 从新到旧查询；结束日期默认今天，起止日包含全天。导出使用相同日期及语言条件。</p>
+          <p class="admin-muted">{{ loadingInquiries ? '正在查询…' : `共 ${visibleInquiries.length} 条` }}，按数据库 created_at
+            从新到旧查询；结束日期默认今天，起止日包含全天。导出使用相同日期及语言条件。</p>
           <ElTable :data="visibleInquiries" empty-text="所选条件暂无客户询盘">
             <ElTableColumn label="提交时间" min-width="180">
               <template #default="{ row }">{{ formatInquiryTime(row.createdAt) }}</template>
@@ -935,10 +812,7 @@ async function saveSettings() {
             <ElTableColumn prop="website" label="网站" />
             <ElTableColumn label="跟进状态">
               <template #default="{ row }">
-                <ElSelect
-                  :model-value="row.status"
-                  @change="updateInquiry(row as InquiryRow, $event)"
-                >
+                <ElSelect :model-value="row.status" @change="updateInquiry(row as InquiryRow, $event)">
                   <ElOption label="待处理" value="NEW" />
                   <ElOption label="跟进中" value="PROCESSING" />
                   <ElOption label="已完成" value="CLOSED" />
@@ -947,25 +821,40 @@ async function saveSettings() {
             </ElTableColumn>
             <ElTableColumn label="操作" fixed="right" width="110">
               <template #default="{ row }">
-                <ElButton link type="primary" @click="viewInquiry(row)">查看详情</ElButton>
+                <ElButton link type="primary" @click="viewInquiry(row as InquiryRow)">查看详情</ElButton>
               </template>
             </ElTableColumn>
           </ElTable>
           <ElDialog v-model="inquiryDialog" title="询盘详情" width="min(720px, 94vw)">
             <dl v-if="inquiryDetail" class="inquiry-detail">
-              <dt>提交时间</dt><dd>{{ formatInquiryTime(inquiryDetail.createdAt) }}</dd>
-              <dt>姓名</dt><dd>{{ inquiryDetail.name }}</dd>
-              <dt>邮箱</dt><dd><a :href="`mailto:${inquiryDetail.email}`">{{ inquiryDetail.email }}</a></dd>
-              <dt>电话</dt><dd>{{ inquiryDetail.phone }}</dd>
-              <dt>公司</dt><dd>{{ inquiryDetail.company || '未填写' }}</dd>
-              <dt>国家/地区</dt><dd>{{ inquiryDetail.country || '未填写' }}</dd>
-              <dt>行业</dt><dd>{{ inquiryDetail.industry || '未填写' }}</dd>
-              <dt>语言</dt><dd>{{ inquiryDetail.locale === 'zh' ? '中文' : 'English' }}</dd>
-              <dt>跟进状态</dt><dd>{{ inquiryStatusLabels[inquiryDetail.status] || inquiryDetail.status }}</dd>
-              <dt v-if="inquiryDetail.product">历史产品</dt><dd v-if="inquiryDetail.product">{{ records.products?.find((p) => p.id === inquiryDetail?.product)?.name || inquiryDetail.product }}</dd>
-              <dt v-if="inquiryDetail.website">历史网站</dt><dd v-if="inquiryDetail.website">{{ inquiryDetail.website }}</dd>
-              <dt>留言内容</dt><dd>{{ inquiryDetail.message }}</dd>
-              <dt>询盘ID</dt><dd>{{ inquiryDetail.id }}</dd>
+              <dt>提交时间</dt>
+              <dd>{{ formatInquiryTime(inquiryDetail.createdAt) }}</dd>
+              <dt>姓名</dt>
+              <dd>{{ inquiryDetail.name }}</dd>
+              <dt>邮箱</dt>
+              <dd><a :href="`mailto:${inquiryDetail.email}`">{{ inquiryDetail.email }}</a></dd>
+              <dt>电话</dt>
+              <dd>{{ inquiryDetail.phone }}</dd>
+              <dt>公司</dt>
+              <dd>{{ inquiryDetail.company || '未填写' }}</dd>
+              <dt>国家/地区</dt>
+              <dd>{{ inquiryDetail.country || '未填写' }}</dd>
+              <dt>行业</dt>
+              <dd>{{ inquiryDetail.industry || '未填写' }}</dd>
+              <dt>语言</dt>
+              <dd>{{ inquiryDetail.locale === 'zh' ? '中文' : 'English' }}</dd>
+              <dt>跟进状态</dt>
+              <dd>{{ inquiryStatusLabels[inquiryDetail.status] || inquiryDetail.status }}</dd>
+              <dt v-if="inquiryDetail.product">历史产品</dt>
+              <dd v-if="inquiryDetail.product">{{records.products?.find((p) => p.id === inquiryDetail?.product)?.name
+                ||
+                inquiryDetail.product}}</dd>
+              <dt v-if="inquiryDetail.website">历史网站</dt>
+              <dd v-if="inquiryDetail.website">{{ inquiryDetail.website }}</dd>
+              <dt>留言内容</dt>
+              <dd>{{ inquiryDetail.message }}</dd>
+              <dt>询盘ID</dt>
+              <dd>{{ inquiryDetail.id }}</dd>
             </dl>
           </ElDialog>
         </section>
@@ -976,55 +865,48 @@ async function saveSettings() {
             <p class="admin-muted">
               保存到数据库后，官网页头、页脚、企业介绍和联系页读取这些设置。
             </p>
-            <ElForm label-position="top" class="admin-settings-form"
-              ><section>
+            <ElForm label-position="top" class="admin-settings-form">
+              <section>
                 <h3>中文信息</h3>
-                <ElFormItem label="中文企业名称"
-                  ><ElInput v-model="settings.companyName" maxlength="120"
-                /></ElFormItem>
-                <ElFormItem label="中文企业介绍"
-                  ><ElInput
-                    v-model="settings.companyIntro"
-                    type="textarea"
-                    :rows="4"
-                    maxlength="4000"
-                /></ElFormItem>
-                <ElFormItem label="中文地址"
-                  ><ElInput v-model="settings.address" maxlength="300"
-                /></ElFormItem>
+                <ElFormItem label="中文企业名称">
+                  <ElInput v-model="settings.companyName" maxlength="120" />
+                </ElFormItem>
+                <ElFormItem label="中文企业介绍">
+                  <ElInput v-model="settings.companyIntro" type="textarea" :rows="4" maxlength="4000" />
+                </ElFormItem>
+                <ElFormItem label="中文地址">
+                  <ElInput v-model="settings.address" maxlength="300" />
+                </ElFormItem>
               </section>
               <section>
                 <h3>English 信息</h3>
-                <ElFormItem label="英文企业名称"
-                  ><ElInput v-model="settings.companyNameEn" maxlength="180"
-                /></ElFormItem>
-                <ElFormItem label="英文企业介绍"
-                  ><ElInput
-                    v-model="settings.companyIntroEn"
-                    type="textarea"
-                    :rows="4"
-                    maxlength="4000"
-                /></ElFormItem>
-                <ElFormItem label="英文地址"
-                  ><ElInput v-model="settings.addressEn" maxlength="300"
-                /></ElFormItem>
+                <ElFormItem label="英文企业名称">
+                  <ElInput v-model="settings.companyNameEn" maxlength="180" />
+                </ElFormItem>
+                <ElFormItem label="英文企业介绍">
+                  <ElInput v-model="settings.companyIntroEn" type="textarea" :rows="4" maxlength="4000" />
+                </ElFormItem>
+                <ElFormItem label="英文地址">
+                  <ElInput v-model="settings.addressEn" maxlength="300" />
+                </ElFormItem>
               </section>
-              <ElFormItem label="联系邮箱"
-                ><ElInput
-                  v-model="settings.contactEmail"
-                  type="email" /></ElFormItem
-              ><ElFormItem label="联系电话"
-                ><ElInput v-model="settings.contactPhone" /></ElFormItem
-              ><ElFormItem label="默认语言"
-                ><ElSelect v-model="settings.defaultLocale"
-                  ><ElOption label="中文" value="zh" /><ElOption
-                    label="English"
-                    value="en" /></ElSelect></ElFormItem
-              ><ElFormItem label="人工客服 HTTPS 地址"
-                ><ElInput v-model="settings.supportUrl" /></ElFormItem></ElForm
-            ><ElButton type="primary" :loading="busy" @click="saveSettings"
-              >保存网站设置</ElButton
-            >
+              <ElFormItem label="联系邮箱">
+                <ElInput v-model="settings.contactEmail" type="email" />
+              </ElFormItem>
+              <ElFormItem label="联系电话">
+                <ElInput v-model="settings.contactPhone" />
+              </ElFormItem>
+              <ElFormItem label="默认语言">
+                <ElSelect v-model="settings.defaultLocale">
+                  <ElOption label="中文" value="zh" />
+                  <ElOption label="English" value="en" />
+                </ElSelect>
+              </ElFormItem>
+              <ElFormItem label="人工客服 HTTPS 地址">
+                <ElInput v-model="settings.supportUrl" />
+              </ElFormItem>
+            </ElForm>
+            <ElButton type="primary" :loading="busy" @click="saveSettings">保存网站设置</ElButton>
           </section>
           <section class="admin-panel">
             <h2>服务器文件存储 · 预留</h2>
@@ -1061,76 +943,91 @@ async function saveSettings() {
         </footer>
       </main>
     </div>
-    <ElDialog
-      v-model="dialog"
-      :title="editId ? '编辑内容' : '新增内容'"
-      width="min(580px, 94vw)"
-      destroy-on-close
-    >
-      <ElForm label-position="top"
-        ><ElFormItem
-          :label="selected === 'articles' ? '标题（必填）' : '中文名称（必填）'"
-          ><ElInput
-            v-model="form.name"
-            :aria-label="selected === 'articles' ? '标题' : '中文名称'"
-            maxlength="120" /></ElFormItem
-        ><ElFormItem v-if="selected !== 'articles'" label="英文名称（必填）"
-          ><ElInput v-model="form.nameEn" aria-label="英文名称" maxlength="180"
-        /></ElFormItem>
+    <ElDialog v-model="dialog" :title="editId ? '编辑内容' : '新增内容'" width="min(580px, 94vw)" destroy-on-close>
+      <ElForm label-position="top">
+        <ElFormItem label="中文名称（必填）">
+          <ElInput v-model="form.name" aria-label="中文名称" maxlength="120" />
+        </ElFormItem>
+        <ElFormItem label="英文名称（必填）">
+          <ElInput v-model="form.nameEn" aria-label="英文名称" maxlength="180" />
+        </ElFormItem>
         <div class="admin-form-grid">
-          <ElFormItem v-if="selected !== 'categories'" label="分类"
-            ><ElInput v-model="form.category" /></ElFormItem
-          ><ElFormItem v-if="selected === 'products'" label="品牌"
-            ><ElInput v-model="form.brand"
-          /></ElFormItem>
+          <ElFormItem v-if="selected !== 'categories'" label="分类">
+            <ElInput v-model="form.category" />
+          </ElFormItem>
+          <ElFormItem v-if="selected === 'products'" label="品牌">
+            <ElInput v-model="form.brand" />
+          </ElFormItem>
         </div>
         <ElFormItem v-if="selected === 'products'" label="产品图片">
           <div>
-            <img
-              v-if="form.image"
-              :src="form.image"
-              alt="产品图片预览"
-              class="admin-product-preview"
-            />
-            <label class="admin-file-button"
-              >选择产品图片
-              <input
-                type="file"
-                aria-label="产品图片"
-                accept=".jpg,.jpeg,.png,.webp"
-                @change="selectProductImage"
-              />
+            <img v-if="form.image" :src="form.image" alt="产品图片预览" class="admin-product-preview" />
+            <label class="admin-file-button">选择产品图片
+              <input type="file" aria-label="产品图片" accept=".jpg,.jpeg,.png,.webp" @change="selectProductImage" />
             </label>
             <p class="admin-muted">
               保存时上传Java服务器并发布图片后关联产品；草稿图片也可公开，请勿上传敏感资料。
             </p>
           </div>
         </ElFormItem>
-        <ElFormItem label="状态"
-          ><ElSelect v-model="form.status"
-            ><ElOption
-              v-for="(label, value) in statusLabels"
-              :key="value"
-              :label="label"
-              :value="value" /></ElSelect></ElFormItem
-        ><ElFormItem label="内容"
-          ><ElInput
-            v-model="form.description"
-            type="textarea"
-            :rows="3"
-            maxlength="20000" /></ElFormItem
-        ><ElFormItem label="英文内容（选填）"
-          ><ElInput
-            v-model="form.descriptionEn"
-            type="textarea"
-            :rows="3" /></ElFormItem
-      ></ElForm>
-      <template #footer
-        ><ElButton @click="dialog = false">取消</ElButton
-        ><ElButton type="primary" :loading="busy" @click="save"
-          >保存到数据库</ElButton
-        ></template
-      >
+        <ElFormItem label="状态">
+          <ElSelect v-model="form.status">
+            <ElOption v-for="(label, value) in statusLabels" :key="value" :label="label" :value="value" />
+          </ElSelect>
+        </ElFormItem>
+        <ElFormItem label="内容">
+          <ElInput v-model="form.description" type="textarea" :rows="3" maxlength="20000" />
+        </ElFormItem>
+        <ElFormItem label="英文内容（选填）">
+          <ElInput v-model="form.descriptionEn" type="textarea" :rows="3" />
+        </ElFormItem>
+
+        <template v-if="selected === 'products' || selected === 'articles'">
+          <ElDivider content-position="left">
+            <span style="font-weight: 600">{{ selected === 'products' ? '产品详情段落' : '文章详情段落' }}</span>
+            <span style="color: var(--el-text-color-secondary); margin-left: 8px; font-size: 12px">
+              前端按标题+正文遍历渲染，用于SEO关键词承载
+            </span>
+          </ElDivider>
+          <div v-for="(sec, idx) in (form.sections ?? [])" :key="idx" class="admin-section-block">
+            <div class="admin-section-head">
+              <span class="admin-section-num">第 {{ idx + 1 }} 段</span>
+              <ElButton link type="danger" size="small" :disabled="(form.sections ?? []).length <= 1"
+                @click="(form.sections ?? []).splice(idx, 1)">删除</ElButton>
+            </div>
+            <ElRow :gutter="12">
+              <ElCol :span="12">
+                <ElFormItem label="中文标题">
+                  <ElInput v-model="sec.title" placeholder="如：产品简介" maxlength="200" />
+                </ElFormItem>
+              </ElCol>
+              <ElCol :span="12">
+                <ElFormItem label="英文标题">
+                  <ElInput v-model="sec.titleEn" placeholder="如：Overview" maxlength="200" />
+                </ElFormItem>
+              </ElCol>
+            </ElRow>
+            <ElRow :gutter="12">
+              <ElCol :span="12">
+                <ElFormItem label="中文正文">
+                  <ElInput v-model="sec.body" type="textarea" :rows="3" maxlength="10000" />
+                </ElFormItem>
+              </ElCol>
+              <ElCol :span="12">
+                <ElFormItem label="英文正文">
+                  <ElInput v-model="sec.bodyEn" type="textarea" :rows="3" maxlength="10000" />
+                </ElFormItem>
+              </ElCol>
+            </ElRow>
+          </div>
+          <ElButton v-if="(form.sections ?? []).length < 10" type="primary" plain size="small"
+            @click="(form.sections ?? []).push({ title: '', titleEn: '', body: '', bodyEn: '' })">+ 新增段落</ElButton>
+        </template>
+      </ElForm>
+      <template #footer>
+        <ElButton @click="dialog = false">取消</ElButton>
+        <ElButton type="primary" :loading="busy" @click="save">保存到数据库</ElButton>
+      </template>
     </ElDialog>
   </div>
 </template>
@@ -1141,21 +1038,25 @@ async function saveSettings() {
   grid-template-columns: 90px minmax(0, 1fr);
   gap: 14px;
 }
+
 .inquiry-detail dd {
   margin: 0;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+
 .admin-login {
   max-width: 440px;
   margin: 80px auto;
   padding: 24px;
 }
+
 .admin-product-image {
   width: 64px;
   height: 64px;
   object-fit: contain;
 }
+
 .admin-product-preview {
   display: block;
   width: 160px;
@@ -1163,6 +1064,7 @@ async function saveSettings() {
   object-fit: contain;
   margin-bottom: 12px;
 }
+
 .admin-shell {
   --el-color-primary: #67783a;
   --el-color-primary-light-3: #8c9a6a;
@@ -1173,6 +1075,7 @@ async function saveSettings() {
   color: #263238;
   font-size: 14px;
 }
+
 .admin-sidebar {
   width: 232px;
   flex-shrink: 0;
@@ -1185,6 +1088,7 @@ async function saveSettings() {
   flex-direction: column;
   padding: 24px 14px;
 }
+
 .admin-logo {
   display: flex;
   gap: 14px;
@@ -1194,10 +1098,12 @@ async function saveSettings() {
   font-size: 18px;
   font-weight: 600;
 }
+
 .admin-logo b {
   font-size: 34px;
   color: #b8ca89;
 }
+
 .admin-logo small {
   display: block;
   font-size: 8px;
@@ -1205,12 +1111,14 @@ async function saveSettings() {
   color: #8ea496;
   margin-top: 6px;
 }
+
 .admin-menu-label {
   font-size: 10px;
   letter-spacing: 2px;
   padding: 0 18px 18px;
   color: #82968a;
 }
+
 .admin-nav-item {
   display: flex;
   align-items: center;
@@ -1224,29 +1132,35 @@ async function saveSettings() {
   color: inherit;
   text-align: left;
 }
-.admin-nav-item > span {
+
+.admin-nav-item>span {
   font-size: 19px;
   width: 22px;
 }
+
 .admin-nav-item:hover {
   background: #ffffff0a;
   color: white;
 }
+
 .admin-nav-item.active {
   background: #67783a;
   color: white;
 }
+
 .admin-sidebar-bottom {
   margin-top: auto;
   padding: 24px 16px 0;
   border-top: 1px solid #ffffff15;
   font-size: 12px;
 }
+
 .admin-sidebar-bottom small {
   display: block;
   color: #82968a;
   margin-top: 8px;
 }
+
 .admin-dot {
   display: inline-block;
   width: 7px;
@@ -1255,10 +1169,12 @@ async function saveSettings() {
   background: #adc585;
   margin-right: 8px;
 }
+
 .admin-workspace {
   flex: 1;
   min-width: 0;
 }
+
 .admin-header {
   height: 72px;
   background: white;
@@ -1269,18 +1185,22 @@ async function saveSettings() {
   padding: 0 32px;
   font-size: 12px;
 }
-.admin-header > div {
+
+.admin-header>div {
   display: flex;
   align-items: center;
   gap: 14px;
 }
+
 .admin-divider {
   color: #c4c9c6;
 }
+
 .admin-site-link {
   color: #67783a;
   margin-right: 15px;
 }
+
 .admin-avatar {
   background: #edf1e5;
   color: #67783a;
@@ -1290,11 +1210,13 @@ async function saveSettings() {
   place-items: center;
   border-radius: 50%;
 }
+
 .admin-main {
   padding: 30px;
   max-width: 1600px;
   margin: auto;
 }
+
 .admin-title {
   display: flex;
   align-items: center;
@@ -1302,16 +1224,19 @@ async function saveSettings() {
   gap: 20px;
   margin-bottom: 24px;
 }
+
 .admin-title p {
   font-size: 10px;
   letter-spacing: 2px;
   color: #8a9690;
   margin: 0 0 8px;
 }
+
 .admin-title h1 {
   font-size: 26px;
   margin: 0;
 }
+
 .admin-notice {
   padding: 14px 18px;
   background: #fff8e7;
@@ -1322,32 +1247,38 @@ async function saveSettings() {
   line-height: 1.8;
   margin-bottom: 24px;
 }
+
 .admin-stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 18px;
   margin-bottom: 24px;
 }
-.admin-stats > div {
+
+.admin-stats>div {
   padding: 24px;
   background: white;
   border: 1px solid #e7ebee;
   border-radius: 8px;
 }
+
 .admin-stats span {
   display: block;
   font-size: 13px;
   color: #697970;
 }
+
 .admin-stats strong {
   display: block;
   font-size: 34px;
   margin: 16px 0 10px;
 }
+
 .admin-stats small {
   color: #98a29c;
   font-size: 11px;
 }
+
 .admin-panel {
   background: white;
   border: 1px solid #e7ebee;
@@ -1356,46 +1287,55 @@ async function saveSettings() {
   margin-bottom: 24px;
   min-width: 0;
 }
+
 .admin-panel h2 {
   font-size: 16px;
   margin-bottom: 22px;
   letter-spacing: 0;
 }
+
 .admin-overview-grid {
   display: grid;
   grid-template-columns: 1.2fr 1fr;
   gap: 24px;
 }
+
 .admin-quick-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
 }
+
 .admin-quick-grid button {
   padding: 22px 8px;
   border: 1px solid #e7ebee;
   background: #fafbf8;
   border-radius: 6px;
 }
+
 .admin-quick-grid span {
   display: block;
   font-size: 28px;
   color: #67783a;
 }
+
 .admin-quick-grid strong {
   display: block;
   font-size: 12px;
   margin: 16px 0 8px;
 }
+
 .admin-quick-grid small {
   font-size: 10px;
   color: #929b95;
 }
+
 .admin-progress {
   list-style: none;
   padding: 0;
   margin: 0;
 }
+
 .admin-progress li {
   display: flex;
   justify-content: space-between;
@@ -1403,11 +1343,13 @@ async function saveSettings() {
   margin-bottom: 18px;
   font-size: 12px;
 }
+
 .admin-muted {
   font-size: 12px;
   color: #89958e;
   line-height: 1.9;
 }
+
 .admin-toolbar {
   display: flex;
   gap: 12px;
@@ -1415,12 +1357,15 @@ async function saveSettings() {
   margin-bottom: 24px;
   flex-wrap: wrap;
 }
-.admin-toolbar > .el-input {
+
+.admin-toolbar>.el-input {
   width: 280px;
 }
-.admin-toolbar > .el-select {
+
+.admin-toolbar>.el-select {
   width: 150px;
 }
+
 .admin-pagination {
   display: flex;
   justify-content: space-between;
@@ -1430,33 +1375,39 @@ async function saveSettings() {
   font-size: 12px;
   color: #89958e;
 }
+
 .admin-tabs {
   display: flex;
   gap: 20px;
   border-bottom: 1px solid #e8ece8;
   margin-bottom: 24px;
 }
+
 .admin-tabs button {
   border: 0;
   background: none;
   padding: 0 6px 15px;
   color: #89958e;
 }
+
 .admin-tabs .active {
   color: #67783a;
   border-bottom: 2px solid #67783a;
   font-weight: 600;
 }
+
 .admin-media-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 18px;
 }
+
 .admin-media-grid article {
   border: 1px solid #e7ebee;
   border-radius: 6px;
   overflow: hidden;
 }
+
 .admin-media-grid img,
 .admin-media-grid video,
 .admin-pdf {
@@ -1465,32 +1416,38 @@ async function saveSettings() {
   object-fit: cover;
   background: #eef1eb;
 }
+
 .admin-pdf {
   display: grid;
   place-items: center;
   color: #67783a;
   font-size: 28px;
 }
-.admin-media-grid article > div:not(.admin-pdf) {
+
+.admin-media-grid article>div:not(.admin-pdf) {
   padding: 14px;
 }
+
 .admin-media-grid strong {
   display: block;
   font-size: 12px;
   overflow-wrap: anywhere;
 }
+
 .admin-media-grid small {
   display: block;
   margin-top: 8px;
   color: #929b95;
   font-size: 10px;
 }
+
 .admin-media-grid a {
   display: block;
   font-size: 12px;
   color: #67783a;
   margin-top: 8px;
 }
+
 .admin-file-button {
   display: inline-block;
   background: #67783a;
@@ -1500,75 +1457,91 @@ async function saveSettings() {
   border-radius: 4px;
   font-size: 12px;
 }
+
 .admin-file-button input {
   display: block;
   max-width: 240px;
   margin-top: 8px;
   font-size: 10px;
 }
+
 .admin-empty {
   text-align: center;
   padding: 65px 24px;
   min-height: 340px;
 }
-.admin-empty > span {
+
+.admin-empty>span {
   font-size: 48px;
   color: #b6c49e;
 }
+
 .admin-empty p {
   font-size: 13px;
   max-width: 560px;
   color: #89958e;
   margin: 0 auto 24px;
 }
+
 .admin-settings-form,
 .admin-form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0 20px;
 }
+
 .admin-storage {
   margin: 0;
 }
-.admin-storage > div {
+
+.admin-storage>div {
   display: flex;
   gap: 30px;
   padding: 14px 0;
   border-bottom: 1px solid #eef0ed;
   font-size: 12px;
 }
+
 .admin-storage dt {
   color: #89958e;
   width: 130px;
   flex-shrink: 0;
 }
+
 .admin-storage dd {
   margin: 0;
   overflow-wrap: anywhere;
 }
+
 .admin-footer {
   text-align: center;
   font-size: 11px;
   color: #a1aaa5;
   padding: 8px 0 16px;
 }
+
 .admin-mobile-toggle {
   display: none;
 }
+
 @media (max-width: 1100px) {
   .admin-sidebar {
     width: 200px;
   }
+
   .admin-main {
     padding: 22px;
   }
+
   .admin-overview-grid {
     grid-template-columns: 1fr;
   }
+
   .admin-media-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
 @media (max-width: 760px) {
   .admin-sidebar {
     display: none;
@@ -1578,68 +1551,87 @@ async function saveSettings() {
     top: 72px;
     height: calc(100vh - 72px);
   }
+
   .admin-sidebar.is-open {
     display: flex;
   }
+
   .admin-header {
     padding: 0 16px;
   }
-  .admin-header > div {
+
+  .admin-header>div {
     gap: 9px;
   }
-  .admin-header > div:last-child > span:last-child {
+
+  .admin-header>div:last-child>span:last-child {
     display: none;
   }
+
   .admin-mobile-toggle {
     display: block;
     border: 0;
     background: #f3f5f0;
     padding: 8px;
   }
+
   .admin-site-link {
     margin: 0;
   }
+
   .admin-main {
     padding: 18px 12px;
   }
+
   .admin-title {
     align-items: flex-start;
   }
+
   .admin-title h1 {
     font-size: 22px;
   }
+
   .admin-stats {
     grid-template-columns: 1fr 1fr;
     gap: 12px;
   }
-  .admin-stats > div {
+
+  .admin-stats>div {
     padding: 18px;
   }
+
   .admin-panel {
     padding: 18px 12px;
   }
+
   .admin-quick-grid {
     grid-template-columns: 1fr 1fr;
   }
+
   .admin-media-grid {
     grid-template-columns: 1fr 1fr;
     gap: 12px;
   }
+
   .admin-pagination {
     flex-wrap: wrap;
   }
+
   .admin-settings-form,
   .admin-form-grid {
     grid-template-columns: 1fr;
   }
-  .admin-storage > div {
+
+  .admin-storage>div {
     flex-direction: column;
     gap: 8px;
   }
+
   .admin-notice {
     padding: 12px;
   }
-  .admin-toolbar > .el-input {
+
+  .admin-toolbar>.el-input {
     width: 100%;
   }
 }

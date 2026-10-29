@@ -17,5 +17,9 @@ public record ContentVo(
     String description,
     String descriptionEn,
     String imageId,
-    String imageUrl)
-    implements java.io.Serializable {}
+    String imageUrl,
+    java.util.List<SectionItem> sections)
+    implements java.io.Serializable {
+
+  public record SectionItem(String title, String titleEn, String body, String bodyEn) {}
+}

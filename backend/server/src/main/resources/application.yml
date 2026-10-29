@@ -25,8 +25,7 @@ server:
 app:
   admin:
     username: ${ADMIN_USERNAME:admin}
-    password-hash: ${ADMIN_PASSWORD_HASH:}
-    # 普通密码仅供dev环境使用，启动时转为BCrypt，不落数据库。
+    # 填写明文或 BCrypt 哈希均可，自动识别。
     password: ${ADMIN_PASSWORD:}
   media:
     public-root: ${MEDIA_PUBLIC_ROOT:}

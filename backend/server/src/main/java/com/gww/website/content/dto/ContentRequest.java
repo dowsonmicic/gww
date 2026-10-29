@@ -16,4 +16,14 @@ public record ContentRequest(
     @NotBlank @Pattern(regexp = "DRAFT|PUBLISHED|ARCHIVED") String status,
     @Schema(description = "内容，纯文本，选填") @Size(max = 20000) String description,
     @Schema(description = "英文内容，选填") @Size(max = 20000) String descriptionEn,
-    @Pattern(regexp = "[0-9a-fA-F-]{36}") String imageId) {}
+    @Pattern(regexp = "[0-9a-fA-F-]{36}") String imageId,
+    @Schema(description = "产品详情结构化分段，可选")
+    java.util.List<SectionItem> sections) {
+
+  @Schema(description = "一段：中/英标题 + 中/英正文")
+  public record SectionItem(
+      @Size(max = 200) String title,
+      @Size(max = 200) String titleEn,
+      @Size(max = 10000) String body,
+      @Size(max = 10000) String bodyEn) {}
+}

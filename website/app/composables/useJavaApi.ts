@@ -1,3 +1,9 @@
+export type SectionItem = {
+  title?: string;
+  titleEn?: string;
+  body?: string;
+  bodyEn?: string;
+};
 export type ContentRow = {
   id: string;
   kind: string;
@@ -11,6 +17,7 @@ export type ContentRow = {
   descriptionEn: string;
   imageId: string | null;
   imageUrl: string | null;
+  sections?: SectionItem[];
 };
 type ApiResult<T> = { code: number; msg: string; data: T };
 

@@ -3,8 +3,8 @@ export const locales: Locale[] = ["zh", "en"];
 export const sections = [
   "about",
   "products",
+  "articles",
   "brands",
-  "news",
   "contact",
 ] as const;
 
@@ -16,8 +16,8 @@ export const text = {
       "首页",
       "关于我们",
       "产品中心",
+      "行业资讯",
       "品牌展示",
-      "新闻资讯",
       "联系我们",
     ] as const,
     eyebrow: "面向应用 · 连接材料",
@@ -87,8 +87,8 @@ export const text = {
       "Home",
       "About",
       "Products",
-      "Brands",
       "News",
+      "Brands",
       "Contact",
     ],
     eyebrow: "APPLICATIONS MEET MATERIALS",
@@ -206,75 +206,6 @@ export const products = [
   },
 ];
 
-export const articles = [
-  {
-    id: "choosing-materials",
-    kind: "knowledge",
-    title: {
-      zh: "材料选型前，需要准备哪些信息？",
-      en: "What information helps start material selection?",
-    },
-    summary: {
-      zh: "从应用、工艺与测试条件出发，建立清晰的沟通基础。",
-      en: "Start with applications, processing and test conditions.",
-    },
-    paragraphs: {
-      zh: [
-        "材料选型需要先明确应用环境、加工工艺以及性能目标。单一型号或典型性能数值，通常不足以判断最终适用性。",
-        "沟通时可准备现用材料、工艺条件、测试标准和目标性能。技术资料、样品测试和供应方确认应共同构成决策依据。",
-      ],
-      en: [
-        "Material selection starts with the operating environment, processing method and performance targets. A grade name or a typical value alone is not enough to confirm suitability.",
-        "Prepare the current material, processing conditions, test standards and target performance. Verified documentation, sample testing and supplier confirmation support the decision.",
-      ],
-    },
-  },
-  {
-    id: "technical-documents",
-    kind: "knowledge",
-    title: {
-      zh: "如何阅读材料技术资料？",
-      en: "How to read material technical documentation",
-    },
-    summary: {
-      zh: "关注单位、测试方法、条件和资料版本，而不只是数值。",
-      en: "Look at units, methods, conditions and document versions.",
-    },
-    paragraphs: {
-      zh: [
-        "对比材料参数时，应同时检查测试方法、单位和测试条件。不同条件下的数值不宜直接比较。",
-        "典型值不等于保证规格。涉及认证、合规和具体应用的判断，应核实最新文件，并由相关专业人员确认。",
-      ],
-      en: [
-        "When comparing properties, check the methods, units and test conditions together. Values measured under different conditions may not be directly comparable.",
-        "Typical values are not guaranteed specifications. Verify current documents for certifications, compliance and specific applications.",
-      ],
-    },
-  },
-  {
-    id: "website-preview",
-    kind: "news",
-    title: {
-      zh: "材料展示网站：一期页面预览",
-      en: "Materials showcase: first-stage preview",
-    },
-    summary: {
-      zh: "产品、品牌与中英文页面现已组成可浏览的展示目录。",
-      en: "Browse product images, brands and bilingual demonstration pages.",
-    },
-    paragraphs: {
-      zh: [
-        "本网站当前为一期A步展示版本，页面使用本地演示数据。产品图片与品牌图片由用户提供。",
-        "本次预览以页面、材料图片和中英文浏览体验为主，正式企业信息与技术资料将在审核确认后完善。",
-      ],
-      en: [
-        "This is the stage A demonstration, using local content. Product and brand images were supplied by the user.",
-        "Administration, verified inquiries and OSS uploads are planned for later stages. They are not available in this version.",
-      ],
-    },
-  },
-];
-
 /**
  * 查询本地演示产品，B步可替换为公共API实现。
  * query匹配型号/类别/品牌，忽略大小写及首尾空格；
@@ -303,17 +234,11 @@ export function resolvePath(parts: string[]) {
     sections.includes(parts[0] as (typeof sections)[number])
   )
     return { type: parts[0]!, id: "" };
-  if (
-    parts.length === 2 &&
-    parts[0] === "products" &&
-    products.some((p) => p.id === parts[1])
-  )
-    return { type: "product", id: parts[1]! };
-  if (
-    parts.length === 2 &&
-    parts[0] === "news" &&
-    articles.some((a) => a.id === parts[1])
-  )
-    return { type: "article", id: parts[1]! };
+  if (parts.length === 2) {
+    if (parts[0] === "products")
+      return { type: "product", id: parts[1]! };
+    if (parts[0] === "articles")
+      return { type: "article", id: parts[1]! };
+  }
   return null;
 }

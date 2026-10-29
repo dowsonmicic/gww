@@ -143,14 +143,9 @@ select:focus-visible {
 }
 
 .brand-mark {
-    font-size: 36px;
-    font-weight: 900;
-    color: var(--green);
-    letter-spacing: -5px;
-}
-
-.brand-mark span {
-    color: #afbc83;
+    height: 42px;
+    width: auto;
+    display: block;
 }
 
 .site-header nav {
@@ -605,6 +600,17 @@ select:focus-visible {
     box-shadow: 0 4px 24px #0002;
     font-size: 13px;
     border-radius: 10px;
+    border: 2px solid transparent;
+    transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+    cursor: pointer;
+}
+
+.floating-contact:hover,
+.floating-contact:focus-visible {
+    border-color: #fff;
+    box-shadow: 0 4px 28px 0 rgba(255, 255, 255, 0.35), 0 0 0 2px var(--green);
+    transform: translateY(-2px);
+    outline: none;
 }
 
 .page-banner {
@@ -804,6 +810,47 @@ select:focus-visible {
     font-size: 14px;
 }
 
+.detail-section {
+    padding: 18px 0;
+    border-top: 1px solid var(--line);
+}
+
+.detail-section h2 {
+    font-size: 18px;
+    margin: 0 0 10px 0;
+    color: var(--green);
+    letter-spacing: 0.5px;
+}
+
+.detail-section p {
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.85;
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+.admin-section-block {
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 6px;
+    padding: 14px 16px 6px;
+    margin-bottom: 12px;
+    background: var(--el-fill-color-lighter);
+}
+
+.admin-section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.admin-section-num {
+    font-weight: 600;
+    color: var(--green);
+    font-size: 13px;
+}
+
 .notice {
     background: var(--soft);
     padding: 20px;
@@ -993,7 +1040,7 @@ select:focus-visible {
     }
 
     .brand-mark {
-        font-size: 30px;
+        height: 32px;
     }
 
     .header-inner {

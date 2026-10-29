@@ -37,7 +37,7 @@ public class SiteSettingsService {
   public SiteSettings save(SiteSettings settings) throws JsonProcessingException {
     // upsert保证首次并发保存不会创建多个设置记录。
     mapper.saveSettings(new ContentRecord(ID, "settings", "网站基础设置", "Site settings",
-        "", "", "PUBLISHED", json.writeValueAsString(settings), "", null));
+        "", "", "PUBLISHED", json.writeValueAsString(settings), "", null, null));
     return settings;
   }
 }

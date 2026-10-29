@@ -25,18 +25,11 @@ public class SecurityConfig {
   @Bean
   UserDetailsService users(
       @Value("${app.admin.username}") String username,
-      @Value("${app.admin.password-hash}") String hash,
-      @Value("${app.admin.password:}") String password,
-      PasswordEncoder encoder,
-      Environment environment) {
-    if (hash.isBlank() && !password.isBlank()
-        && (environment.acceptsProfiles(Profiles.of("dev", "local"))
-            && !environment.acceptsProfiles(Profiles.of("prod")))) {
-      hash = encoder.encode(password);
-    }
-    if (!hash.matches("\\$2[aby]\\$\\d{2}\\$[./A-Za-z0-9]{53}")) {
-      throw new IllegalStateException("请配置ADMIN_PASSWORD_HASH；dev环境也可配置ADMIN_PASSWORD");
-    }
+      @Value("${app.admin.password}") String password,
+      PasswordEncoder encoder) {
+    // 一个入口：ADMIN_PASSWORD 可以是明文（自动 BCrypt 编码）或已编码的 $2a$... 哈希。
+    String hash = password.matches("\\$2[aby]\\$\\d{2}\\$[./A-Za-z0-9]{53}")
+        ? password : encoder.encode(password);
     return new InMemoryUserDetailsManager(
         User.withUsername(username).password(hash).roles("ADMIN").build());
   }

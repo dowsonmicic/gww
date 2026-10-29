@@ -32,13 +32,13 @@ public interface ContentMapper {
 
   @Insert(
       "INSERT INTO"
-          + " content_record(id,kind,name,name_en,category,brand,status,description,description_en,image_id)"
-          + " VALUES(#{id},#{kind},#{name},#{nameEn},#{category},#{brand},#{status},#{description},#{descriptionEn},#{imageId})")
+          + " content_record(id,kind,name,name_en,category,brand,status,description,description_en,image_id,sections)"
+          + " VALUES(#{id},#{kind},#{name},#{nameEn},#{category},#{brand},#{status},#{description},#{descriptionEn},#{imageId},#{sections})")
   void insert(ContentRecord row);
 
   @Update(
       "UPDATE content_record SET"
-          + " name=#{name},name_en=#{nameEn},category=#{category},brand=#{brand},status=#{status},description=#{description},description_en=#{descriptionEn},image_id=#{imageId},updated_at=CURRENT_TIMESTAMP"
+          + " name=#{name},name_en=#{nameEn},category=#{category},brand=#{brand},status=#{status},description=#{description},description_en=#{descriptionEn},image_id=#{imageId},sections=#{sections},updated_at=CURRENT_TIMESTAMP"
           + " WHERE id=#{id} AND kind=#{kind}")
   int update(ContentRecord row);
 

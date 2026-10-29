@@ -18,7 +18,7 @@ const preferred = useCookie<string>("site-locale", {
   sameSite: "lax",
   maxAge: 31536000,
 });
-const links = ["", "about", "products", "brands", "news", "contact"];
+const links = ["", "about", "products", "articles", "brands", "contact"];
 const company = computed(
   () =>
     (locale.value === "en"
@@ -39,7 +39,29 @@ watch(
     menuOpen.value = false;
   },
 );
-useHead(() => ({ htmlAttrs: { lang: locale.value } }));
+useHead(() => ({
+  htmlAttrs: { lang: locale.value },
+  // 全局 Organization schema — 告诉 Google "这个站属于 GWW 公司"
+  // 每页都注入一次，和页面级 BreadcrumbList/Product schema 并存
+  script: [
+    {
+      type: "application/ld+json",
+      innerHTML: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        name: company.value,
+        url: config.public.siteUrl,
+        logo: `${config.public.siteUrl}/images/brands/brand_j.png`,
+        contactPoint: config.public.contactEmail || config.public.contactPhone ? {
+          "@type": "ContactPoint",
+          email: config.public.contactEmail || undefined,
+          telephone: config.public.contactPhone || undefined,
+          contactType: "sales",
+        } : undefined,
+      }),
+    },
+  ],
+}));
 </script>
 
 <template>
@@ -55,7 +77,7 @@ useHead(() => ({ htmlAttrs: { lang: locale.value } }));
     <header class="site-header">
       <div class="container header-inner">
         <NuxtLink :to="`/${locale}`" class="identity" :aria-label="t.nav[0]">
-          <span class="brand-mark" aria-hidden="true">M<span>·</span></span>
+          <img class="brand-mark" src="/images/brands/brand_j.png" alt="logo" />
           <span><strong>{{ company }}</strong><small>{{ t.tagline }}</small></span>
         </NuxtLink>
         <button class="menu-toggle" :aria-label="t.menu" :aria-expanded="menuOpen" aria-controls="main-nav"
@@ -100,11 +122,12 @@ useHead(() => ({ htmlAttrs: { lang: locale.value } }));
         </div>
       </div>
       <div class="container footer-bottom">
-        <span>© {{ new Date().getFullYear() }} {{ company }}</span><span>{{
+        <span>© {{ new Date().getFullYear() }} {{ company }}</span>
+        <!-- <span>{{
           locale === "zh"
             ? "展示网站"
             : "Demonstration website"
-        }}</span>
+        }}</span> -->
       </div>
     </footer>
     <a v-if="site.supportUrl" class="floating-contact" :href="site.supportUrl" target="_blank"

@@ -7,6 +7,8 @@
     "build": "nuxt build",
     "start": "node .output/server/index.mjs",
     "postinstall": "nuxt prepare",
+    "clean": "powershell -Command \"Remove-Item -Recurse -Force .nuxt -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force node_modules/.cache -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force .output -ErrorAction SilentlyContinue\"",
+    "dev:clean": "npm run clean && nuxt dev",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
     "test:smoke": "node tests/smoke.mjs",
     "test:e2e": "playwright test",
@@ -14,7 +16,13 @@
     "format": "prettier --write app server tests nuxt.config.ts playwright.config.ts package.json"
   },
   "dependencies": {
+    "@nuxtjs/robots": "^6.2.4",
+    "@nuxtjs/sitemap": "^8.6.2",
+    "@types/dompurify": "^3.0.5",
+    "@types/markdown-it": "^14.2.0",
+    "dompurify": "^3.4.17",
     "element-plus": "2.14.7",
+    "markdown-it": "^15.0.3",
     "nuxt": "4.6.2",
     "vue": "3.5.44",
     "vue-router": "5.4.0"
