@@ -117,25 +117,23 @@ class ApiIntegrationTest {
   }
 
   @Test
-  void articleUsesOneRequiredTitle() throws Exception {
+  void articleUsesOneRequiredName() throws Exception {
     var result = mvc.perform(
             post("/api/admin/content/articles")
                 .with(user("admin").roles("ADMIN")).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"title\":\"单一标题\",\"status\":\"PUBLISHED\"}"))
+                .content("{\"name\":\"单一标题\",\"status\":\"PUBLISHED\"}"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.title").value("单一标题"))
-        .andExpect(jsonPath("$.data.name").doesNotExist())
-        .andExpect(jsonPath("$.data.nameEn").doesNotExist())
+        .andExpect(jsonPath("$.data.name").value("单一标题"))
         .andReturn();
     String id = json.readTree(result.getResponse().getContentAsString()).path("data").path("id").asText();
     mvc.perform(get("/api/public/content/articles/" + id))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.title").value("单一标题"));
+        .andExpect(jsonPath("$.data.name").value("单一标题"));
     mvc.perform(post("/api/admin/content/articles")
             .with(user("admin").roles("ADMIN")).with(csrf())
             .contentType(MediaType.APPLICATION_JSON)
-            .content("{\"title\":\" \",\"status\":\"DRAFT\"}"))
+            .content("{\"name\":\" \",\"status\":\"DRAFT\"}"))
         .andExpect(status().isBadRequest());
     mvc.perform(delete("/api/admin/content/articles/" + id)
             .with(user("admin").roles("ADMIN")).with(csrf()))

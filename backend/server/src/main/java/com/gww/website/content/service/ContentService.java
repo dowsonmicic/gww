@@ -56,7 +56,8 @@ public class ContentService {
   public ContentVo save(String kind, String id, ContentRequest dto) {
     checkKind(kind);
     boolean article = "articles".equals(kind);
-    String name = article ? dto.title() : dto.name();
+    // 数据库只有 name/name_en，articles 的"标题"就存在 name 里
+    String name = dto.name();
     if (name == null || name.isBlank())
       throw new BusinessException(HttpStatus.BAD_REQUEST, article ? "标题不能为空" : "名称不能为空");
     if (!article && (dto.nameEn() == null || dto.nameEn().isBlank()))

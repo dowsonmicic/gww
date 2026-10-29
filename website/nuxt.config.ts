@@ -2,37 +2,47 @@ export default defineNuxtConfig({
   compatibilityDate: "2025-11-01",
   devtools: { enabled: false },
   css: ["~/assets/main.css"],
+
+  // ========== 环境变量（从 .env 或系统环境读，key 必须带 NUXT_ 前缀）==========
   runtimeConfig: {
-    javaApiBase: "http://127.0.0.1:8083",
+    // 服务端专属：后端 API 基址（客户端看不到，安全）
+    javaApiBase: process.env.NUXT_JAVA_API_BASE || "http://127.0.0.1:8083",
+    // 公开变量（客户端/服务端都能读）
     public: {
       defaultLocale: "zh",
       supportUrl: "",
-      companyName: "",
-      companyNameEn: "",
-      contactEmail: "",
-      contactPhone: "",
-      siteUrl: "https://yourdomain.com", // TODO: 部署前替换为真实域名
+      companyName: process.env.NUXT_PUBLIC_COMPANY_NAME || "GWW",
+      companyNameEn: process.env.NUXT_PUBLIC_COMPANY_NAME_EN || "GWW Specialty Materials",
+      contactEmail: process.env.NUXT_PUBLIC_CONTACT_EMAIL || "",
+      contactPhone: process.env.NUXT_PUBLIC_CONTACT_PHONE || "",
+      // 正式域名（生产必改）
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || "https://yourdomain.com",
     },
   },
+
   modules: ["@nuxtjs/robots", "@nuxtjs/sitemap"],
-  // robots.txt：allow/disallow 用小写键名，模块自动加 User-agent: *
+
   robots: {
     allow: ["/"],
     disallow: ["/admin", "/api/"],
     sitemap: "/sitemap.xml",
   },
-  // sitemap 基础配置；动态产品/文章路由在 server 侧生成
+
+  // sitemap 模块的主域名——和 runtimeConfig.public.siteUrl 同源
   site: {
-    url: "https://yourdomain.com", // TODO: 部署前替换
+    url: process.env.NUXT_PUBLIC_SITE_URL || "https://yourdomain.com",
   },
+
   sitemap: {
     changefreq: "weekly",
     priority: 0.8,
   } as any,
+
   app: {
     head: {
       meta: [
         { name: "viewport", content: "width=device-width, initial-scale=1" },
+        // 开发环境 noindex 防收录，生产环境自动移除
         ...(process.env.NODE_ENV !== "production"
           ? [{ name: "robots", content: "noindex, nofollow" }]
           : []),
